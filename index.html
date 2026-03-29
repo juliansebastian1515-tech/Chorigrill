@@ -62,13 +62,15 @@ input, select {
 <h2>🔥 CHORIGRILL</h2>
 
 <input placeholder="Nombre del cliente" id="cliente">
-<input placeholder="Número de pedido" id="numero">
 
 <input type="number" placeholder="Pechuga" id="pechuga">
 <input type="number" placeholder="Carne Asada" id="carne">
 <input type="number" placeholder="Lomo" id="lomo">
 <input type="number" placeholder="Sopa" id="sopa">
 <input type="number" placeholder="Arroz" id="arroz">
+
+<!-- 🧃 NUEVO CAMPO BEBIDA -->
+<input type="number" placeholder="Valor bebida" id="bebida">
 
 <select id="tipo">
 <option>Aquí</option>
@@ -81,6 +83,7 @@ input, select {
 
 <script>
 let pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+let contador = pedidos.length > 0 ? Math.max(...pedidos.map(p => p.numero)) : 0;
 
 // 💰 PRECIOS
 const precios = {
@@ -95,36 +98,40 @@ function guardar() {
   localStorage.setItem("pedidos", JSON.stringify(pedidos));
 }
 
-// 🕒 FORMATO DE FECHA Y HORA
-function obtenerFechaHora() {
+// 🕒 SOLO HORA
+function obtenerHora() {
   const ahora = new Date();
-  return ahora.toLocaleString(); // fecha + hora completa
+  return ahora.toLocaleTimeString();
 }
 
 function agregar() {
-  if (!cliente.value || !numero.value) {
-    alert("Falta nombre o número");
+  if (!cliente.value) {
+    alert("Falta nombre del cliente");
     return;
   }
+
+  contador++;
 
   const total =
     (pechuga.value * precios.pechuga) +
     (carne.value * precios.carne) +
     (lomo.value * precios.lomo) +
     (sopa.value * precios.sopa) +
-    (arroz.value * precios.arroz);
+    (arroz.value * precios.arroz) +
+    (bebida.value ? parseInt(bebida.value) : 0); // 🧃 SUMA BEBIDA
 
   const pedido = {
     id: Date.now(),
+    numero: contador,
     cliente: cliente.value,
-    numero: numero.value,
-    fechaHora: obtenerFechaHora(),
+    hora: obtenerHora(),
     tipo: tipo.value,
     pechuga: pechuga.value,
     carne: carne.value,
     lomo: lomo.value,
     sopa: sopa.value,
     arroz: arroz.value,
+    bebida: bebida.value,
     total: total
   };
 
@@ -136,6 +143,11 @@ function agregar() {
 
 function eliminar(id) {
   pedidos = pedidos.filter(p => p.id !== id);
+
+  if (pedidos.length === 0) {
+    contador = 0;
+  }
+
   guardar();
   mostrar();
 }
@@ -148,11 +160,13 @@ function mostrar() {
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
 
-  pedidos.forEach(p => {
+  pedidos
+  .sort((a, b) => a.id - b.id)
+  .forEach((p, index) => {
     lista.innerHTML += `
-    <div class="card">
+    <div class="card" style="${index === 0 ? 'border: 2px solid yellow;' : ''}">
       <b>#${p.numero} - ${p.cliente}</b><br>
-      🕒 ${p.fechaHora}<br>
+      🕒 ${p.hora}<br>
       Tipo: ${p.tipo}<br><br>
 
       ${p.pechuga > 0 ? "Pechuga: " + p.pechuga + "<br>" : ""}
@@ -160,6 +174,7 @@ function mostrar() {
       ${p.lomo > 0 ? "Lomo: " + p.lomo + "<br>" : ""}
       ${p.sopa > 0 ? "Sopa: " + p.sopa + "<br>" : ""}
       ${p.arroz > 0 ? "Arroz: " + p.arroz + "<br>" : ""}
+      ${p.bebida > 0 ? "Bebida: $" + p.bebida + "<br>" : ""}
 
       <br><b>Total: $${p.total}</b><br>
 
