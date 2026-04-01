@@ -1,192 +1,150 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>CHORIGRILL</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>CHORIGRILL 🔥</title>
 
-<style>
-body {
-  font-family: Arial;
-  padding: 10px;
-  background: #111;
-  color: white;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1f1f1f, #2c2c2c);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-h2 {
-  text-align: center;
-}
+    .container {
+      background: #2a2a2a;
+      padding: 25px;
+      border-radius: 15px;
+      width: 350px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
 
-.card {
-  background: #1e1e1e;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 10px;
-}
+    h1 {
+      text-align: center;
+      color: #ff7b00;
+      margin-bottom: 20px;
+    }
 
-button {
-  padding: 6px 10px;
-  margin: 5px;
-  border: none;
-  border-radius: 5px;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #1f1f1f;
+      color: white;
+    }
 
-input, select {
-  width: 100%;
-  margin: 5px 0;
-  padding: 6px;
-  border-radius: 5px;
-  border: none;
-}
+    input::placeholder {
+      color: #aaa;
+    }
 
-.btn-add {
-  background: green;
-  color: white;
-  width: 100%;
-}
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #ff7b00;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
 
-.btn-ok {
-  background: #2ecc71;
-  color: white;
-}
+    button:hover {
+      background: #ff9a2a;
+    }
 
-.btn-cancel {
-  background: red;
-  color: white;
-}
-</style>
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 15px;
+    }
+
+    li {
+      background: #1f1f1f;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .precio {
+      color: #00ffae;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
 
-<h2>🔥 CHORIGRILL</h2>
+  <div class="container">
+    <h1>🔥 CHORIGRILL</h1>
 
-<input placeholder="Nombre del cliente" id="cliente">
+    <input type="text" id="nombre" placeholder="🍔 Producto">
+    <input type="number" id="precio" placeholder="💲 Precio">
 
-<input type="number" placeholder="Pechuga" id="pechuga">
-<input type="number" placeholder="Carne Asada" id="carne">
-<input type="number" placeholder="Lomo" id="lomo">
-<input type="number" placeholder="Sopa" id="sopa">
-<input type="number" placeholder="Arroz" id="arroz">
+    <button onclick="agregarPedido()">Agregar Pedido</button>
 
-<!-- 🧃 NUEVO CAMPO BEBIDA -->
-<input type="number" placeholder="Valor bebida" id="bebida">
+    <ul id="listaPedidos"></ul>
+  </div>
 
-<select id="tipo">
-<option>Aquí</option>
-<option>Para llevar</option>
-</select>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-<button class="btn-add" onclick="agregar()">Agregar Pedido</button>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
+      authDomain: "chorigrill-9d0e9.firebaseapp.com",
+      projectId: "chorigrill-9d0e9",
+      storageBucket: "chorigrill-9d0e9.firebasestorage.app",
+      messagingSenderId: "548842416171",
+      appId: "1:548842416171:web:8ccb91cec236faa957226e"
+    };
 
-<div id="lista"></div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-<script>
-let pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
-let contador = pedidos.length > 0 ? Math.max(...pedidos.map(p => p.numero)) : 0;
+    window.agregarPedido = async function() {
+      const nombre = document.getElementById("nombre").value;
+      const precio = document.getElementById("precio").value;
 
-// 💰 PRECIOS
-const precios = {
-  pechuga: 12000,
-  carne: 12000,
-  lomo: 12000,
-  sopa: 4000,
-  arroz: 1000
-};
+      if (!nombre || !precio) {
+        alert("Completa los datos");
+        return;
+      }
 
-function guardar() {
-  localStorage.setItem("pedidos", JSON.stringify(pedidos));
-}
+      await addDoc(collection(db, "pedidos"), {
+        nombre: nombre,
+        total: Number(precio)
+      });
 
-// 🕒 SOLO HORA
-function obtenerHora() {
-  const ahora = new Date();
-  return ahora.toLocaleTimeString();
-}
+      document.getElementById("nombre").value = "";
+      document.getElementById("precio").value = "";
+    };
 
-function agregar() {
-  if (!cliente.value) {
-    alert("Falta nombre del cliente");
-    return;
-  }
+    onSnapshot(collection(db, "pedidos"), (snapshot) => {
+      const lista = document.getElementById("listaPedidos");
+      lista.innerHTML = "";
 
-  contador++;
-
-  const total =
-    (pechuga.value * precios.pechuga) +
-    (carne.value * precios.carne) +
-    (lomo.value * precios.lomo) +
-    (sopa.value * precios.sopa) +
-    (arroz.value * precios.arroz) +
-    (bebida.value ? parseInt(bebida.value) : 0); // 🧃 SUMA BEBIDA
-
-  const pedido = {
-    id: Date.now(),
-    numero: contador,
-    cliente: cliente.value,
-    hora: obtenerHora(),
-    tipo: tipo.value,
-    pechuga: pechuga.value,
-    carne: carne.value,
-    lomo: lomo.value,
-    sopa: sopa.value,
-    arroz: arroz.value,
-    bebida: bebida.value,
-    total: total
-  };
-
-  pedidos.push(pedido);
-  guardar();
-  limpiar();
-  mostrar();
-}
-
-function eliminar(id) {
-  pedidos = pedidos.filter(p => p.id !== id);
-
-  if (pedidos.length === 0) {
-    contador = 0;
-  }
-
-  guardar();
-  mostrar();
-}
-
-function limpiar() {
-  document.querySelectorAll("input").forEach(i => i.value = "");
-}
-
-function mostrar() {
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
-
-  pedidos
-  .sort((a, b) => a.id - b.id)
-  .forEach((p, index) => {
-    lista.innerHTML += `
-    <div class="card" style="${index === 0 ? 'border: 2px solid yellow;' : ''}">
-      <b>#${p.numero} - ${p.cliente}</b><br>
-      🕒 ${p.hora}<br>
-      Tipo: ${p.tipo}<br><br>
-
-      ${p.pechuga > 0 ? "Pechuga: " + p.pechuga + "<br>" : ""}
-      ${p.carne > 0 ? "Carne: " + p.carne + "<br>" : ""}
-      ${p.lomo > 0 ? "Lomo: " + p.lomo + "<br>" : ""}
-      ${p.sopa > 0 ? "Sopa: " + p.sopa + "<br>" : ""}
-      ${p.arroz > 0 ? "Arroz: " + p.arroz + "<br>" : ""}
-      ${p.bebida > 0 ? "Bebida: $" + p.bebida + "<br>" : ""}
-
-      <br><b>Total: $${p.total}</b><br>
-
-      <button class="btn-ok" onclick="eliminar(${p.id})">Listo</button>
-      <button class="btn-cancel" onclick="eliminar(${p.id})">Cancelar</button>
-    </div>
-    `;
-  });
-}
-
-mostrar();
-</script>
+      snapshot.forEach(doc => {
+        const pedido = doc.data();
+        lista.innerHTML += `
+          <li>
+            <span>${pedido.nombre}</span>
+            <span class="precio">$${pedido.total}</span>
+          </li>
+        `;
+      });
+    });
+  </script>
 
 </body>
 </html>
