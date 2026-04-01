@@ -8,7 +8,7 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #000;
   color: white;
 }
@@ -17,39 +17,36 @@ h1 {
   text-align: center;
   color: orange;
   font-size: 32px;
+  margin-top: 20px;
 }
 
 .container {
   padding: 15px;
+  max-width: 500px;
+  margin: auto;
 }
 
-/* Se eliminaron los bordes y fondos extra del bloque para evitar los recuadros dobles */
+/* Eliminamos recuadros exteriores para un look más limpio */
 .bloque {
-  margin: 10px 0;
+  margin-bottom: 10px;
 }
 
-input {
+input, select {
   width: 100%;
   padding: 12px;
-  margin-top: 5px;
-  background: black;
-  border: 2px solid orange;
-  color: white;
-  font-size: 16px;
-  box-sizing: border-box; /* Asegura que el padding no desborde el ancho */
-  border-radius: 5px;
-}
-
-select {
-  width: 100%;
-  padding: 12px;
-  margin-top: 5px;
-  background: black;
-  border: 2px solid orange;
+  margin-top: 8px;
+  background: #111;
+  border: 1.5px solid orange;
   color: white;
   font-size: 16px;
   box-sizing: border-box;
-  border-radius: 5px;
+  border-radius: 8px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #ffaa00;
+  background: #1a1a1a;
 }
 
 button {
@@ -61,6 +58,7 @@ button {
   margin-top: 15px;
   cursor: pointer;
   font-weight: bold;
+  transition: 0.2s;
 }
 
 .enviar {
@@ -68,39 +66,55 @@ button {
   color: black;
 }
 
-.listo {
-  background: green;
-  color: white;
-  margin-top: 5px;
+.enviar:active {
+  transform: scale(0.98);
 }
 
-.cancelar {
-  background: red;
-  color: white;
-  margin-top: 5px;
-}
+.listo { background: #28a745; color: white; flex: 1; }
+.cancelar { background: #dc3545; color: white; flex: 1; }
 
 ul {
   list-style: none;
-  padding: 10px;
-  margin: 0;
+  padding: 15px;
+  max-width: 500px;
+  margin: auto;
 }
 
 li {
   background: #111;
   border: 2px solid orange;
-  margin: 10px 0;
+  margin-bottom: 15px;
   padding: 15px;
-  border-radius: 10px;
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease-in;
 }
 
 .primero {
-  background: #ffaa00; /* Un naranja un poco más suave */
+  background: orange;
   color: black;
 }
 
-.primero .ticket-line {
-  border-color: black !important; /* Para que las líneas punteadas resalten en el primer pedido */
+.primero b, .primero span { color: black; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ticket {
+  border-top: 1px dashed #555;
+  border-bottom: 1px dashed #555;
+  margin: 10px 0;
+  padding: 8px 0;
+  font-family: monospace;
+}
+
+.primero .ticket { border-color: black; }
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
 </style>
 </head>
@@ -110,48 +124,38 @@ li {
 <h1>🔥 Chorigrill</h1>
 
 <div class="container">
+  <p id="info" style="text-align: center; font-weight: bold; color: orange;"></p>
 
   <div class="bloque">
-    <p id="info" style="text-align: center; font-weight: bold; color: orange; font-size: 18px; margin: 0;"></p>
-  </div>
-
-  <div class="bloque">
-    <input id="nombre" placeholder="Nombre">
-  </div>
-
-  <div class="bloque">
+    <input id="nombre" placeholder="Nombre del cliente">
     <input id="direccion" placeholder="Dirección (opcional)">
   </div>
 
   <div class="bloque">
-    <input type="number" id="pechuga" placeholder="Pechuga ($12.000)">
-    <input type="number" id="carne" placeholder="Carne ($12.000)">
-    <input type="number" id="lomo" placeholder="Lomo ($12.000)">
-    <input type="number" id="sopa" placeholder="Sopa ($4.000)">
-    <input type="number" id="arroz" placeholder="Arroz ($1.000)">
-  </div>
-
-  <div class="bloque">
-    <input type="number" id="bebida" placeholder="Bebida (Ingresar precio)">
+    <input type="number" id="pechuga" placeholder="Cantidad Pechuga ($12k)">
+    <input type="number" id="carne" placeholder="Cantidad Carne ($12k)">
+    <input type="number" id="lomo" placeholder="Cantidad Lomo ($12k)">
+    <input type="number" id="sopa" placeholder="Cantidad Sopa ($4k)">
+    <input type="number" id="arroz" placeholder="Cantidad Arroz ($1k)">
+    <input type="number" id="bebida" placeholder="Precio de Bebida ($)">
   </div>
 
   <div class="bloque">
     <select id="tipo">
-      <option value="0">Aquí</option>
-      <option value="3000">Para llevar (+ extra $3.000)</option>
+      <option value="0">Consumo en local (Aquí)</option>
+      <option value="3000">Para llevar / Domicilio (+$3.000)</option>
     </select>
   </div>
 
-  <button class="enviar" onclick="agregarPedido()">Enviar Pedido</button>
-
+  <button class="enviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
 </div>
 
-<h2 style="text-align:center;">Pedidos Activos</h2>
+<h2 style="text-align:center; color: orange;">Pedidos Pendientes</h2>
 <ul id="lista"></ul>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
@@ -162,132 +166,130 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Obtener número automático
+// Función para limpiar todos los campos
+function limpiarFormulario() {
+    const ids = ["nombre", "direccion", "pechuga", "carne", "lomo", "sopa", "arroz", "bebida"];
+    ids.forEach(id => document.getElementById(id).value = "");
+    document.getElementById("tipo").value = "0";
+}
+
 async function generarNumero() {
   const snap = await getDocs(collection(db, "pedidos"));
   if (snap.empty) return 1;
-
   let max = 0;
-  snap.forEach(d => {
-    if (d.data().numero > max) max = d.data().numero;
-  });
-
+  snap.forEach(d => { if (d.data().numero > max) max = d.data().numero; });
   return max + 1;
 }
 
-// Agregar pedido a la base de datos
 window.agregarPedido = async function() {
+  const btn = document.querySelector(".enviar");
+  btn.disabled = true; // Evita doble clic
+  btn.innerText = "Enviando...";
+
   const numero = await generarNumero();
-
   const ahora = new Date();
-  const fecha = ahora.toLocaleDateString();
-  const hora = ahora.toLocaleTimeString();
+  
+  const datos = {
+    nombre: document.getElementById("nombre").value,
+    direccion: document.getElementById("direccion").value,
+    p: Number(document.getElementById("pechuga").value) || 0,
+    c: Number(document.getElementById("carne").value) || 0,
+    l: Number(document.getElementById("lomo").value) || 0,
+    s: Number(document.getElementById("sopa").value) || 0,
+    a: Number(document.getElementById("arroz").value) || 0,
+    bebida: Number(document.getElementById("bebida").value) || 0,
+    extra: Number(document.getElementById("tipo").value)
+  };
 
-  const nombre = document.getElementById("nombre").value;
-  const direccion = document.getElementById("direccion").value;
-
-  const p = Number(document.getElementById("pechuga").value) || 0;
-  const c = Number(document.getElementById("carne").value) || 0;
-  const l = Number(document.getElementById("lomo").value) || 0;
-  const s = Number(document.getElementById("sopa").value) || 0;
-  const a = Number(document.getElementById("arroz").value) || 0;
-  const bebida = Number(document.getElementById("bebida").value) || 0;
-  const extra = Number(document.getElementById("tipo").value);
-
-  // Crear un arreglo con el detalle de los productos para la factura
   const detalle = [];
-  if (p > 0) detalle.push({ nombre: "Pechuga", cant: p, precio: p * 12000 });
-  if (c > 0) detalle.push({ nombre: "Carne", cant: c, precio: c * 12000 });
-  if (l > 0) detalle.push({ nombre: "Lomo", cant: l, precio: l * 12000 });
-  if (s > 0) detalle.push({ nombre: "Sopa", cant: s, precio: s * 4000 });
-  if (a > 0) detalle.push({ nombre: "Arroz", cant: a, precio: a * 1000 });
-  if (bebida > 0) detalle.push({ nombre: "Bebida", cant: 1, precio: bebida });
-  if (extra > 0) detalle.push({ nombre: "Empaque/Domicilio", cant: 1, precio: extra });
+  if (datos.p > 0) detalle.push({ n: "Pechuga", q: datos.p, v: datos.p * 12000 });
+  if (datos.c > 0) detalle.push({ n: "Carne", q: datos.c, v: datos.c * 12000 });
+  if (datos.l > 0) detalle.push({ n: "Lomo", q: datos.l, v: datos.l * 12000 });
+  if (datos.s > 0) detalle.push({ n: "Sopa", q: datos.s, v: datos.s * 4000 });
+  if (datos.a > 0) detalle.push({ n: "Arroz", q: datos.a, v: datos.a * 1000 });
+  if (datos.bebida > 0) detalle.push({ n: "Bebida", q: 1, v: datos.bebida });
+  if (datos.extra > 0) detalle.push({ n: "Empaque/Dom", q: 1, v: datos.extra });
 
-  // Calcular el total basado en los detalles
-  const total = detalle.reduce((acc, item) => acc + item.precio, 0);
+  const total = detalle.reduce((acc, item) => acc + item.v, 0);
 
-  // Solo enviar si hay un total mayor a 0 o un nombre (evita pedidos vacíos por error)
-  if (total === 0 && !nombre) {
-      alert("Por favor agrega al menos un producto o nombre al pedido.");
+  if (total === 0 && !datos.nombre) {
+      alert("Pedido vacío");
+      btn.disabled = false;
+      btn.innerText = "ENVIAR PEDIDO";
       return;
   }
 
-  await addDoc(collection(db, "pedidos"), {
-    numero, nombre, direccion,
-    detalle, total, fecha, hora
-  });
-
-  // Limpiar campos después de enviar
-  document.querySelectorAll("input").forEach(input => input.value = "");
-  document.getElementById("tipo").value = "0";
-};
-
-// Eliminar / Completar pedido
-window.eliminar = async function(id) {
-  await deleteDoc(doc(db, "pedidos", id));
-};
-
-// Leer en tiempo real
-onSnapshot(collection(db, "pedidos"), (snap) => {
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
-
-  let pedidos = [];
-
-  snap.forEach(d => pedidos.push({ id: d.id, ...d.data() }));
-
-  pedidos.sort((a,b)=>a.numero-b.numero);
-
-  pedidos.forEach((p,i) => {
+  try {
+    await addDoc(collection(db, "pedidos"), {
+      numero, 
+      nombre: datos.nombre, 
+      direccion: datos.direccion,
+      detalle, 
+      total, 
+      fecha: ahora.toLocaleDateString(), 
+      hora: ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    });
     
-    // Construir la sección del recibo/factura
-    let ticketHtml = "";
-    if (p.detalle && p.detalle.length > 0) {
-      ticketHtml += `<div class="ticket-line" style="border-top: 2px dashed gray; border-bottom: 2px dashed gray; margin: 10px 0; padding: 10px 0; font-family: monospace; font-size: 15px;">`;
-      
-      p.detalle.forEach(item => {
-        ticketHtml += `
-          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <span>${item.cant}x ${item.nombre}</span>
-            <span>$${item.precio}</span>
-          </div>
-        `;
-      });
-      
-      ticketHtml += `</div>`;
-    }
+    limpiarFormulario(); // <-- Aquí se limpian los campos al terminar
+  } catch (e) {
+    console.error("Error: ", e);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "ENVIAR PEDIDO";
+  }
+};
 
-    lista.innerHTML += `
-      <li class="${i===0 ? 'primero' : ''}">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <b style="font-size: 20px;">Pedido #${p.numero}</b>
-          <span style="font-size: 12px; opacity: 0.8;">${p.hora}</span>
+window.eliminar = async (id) => await deleteDoc(doc(db, "pedidos", id));
+
+// Optimización: Escucha en tiempo real con orden eficiente
+const q = query(collection(db, "pedidos"), orderBy("numero", "asc"));
+
+onSnapshot(q, (snap) => {
+  const lista = document.getElementById("lista");
+  let htmlFinal = ""; // Construimos todo el string primero (más rápido)
+
+  snap.forEach((d) => {
+    const p = d.data();
+    const esPrimero = lista.children.length === 0 && htmlFinal === "";
+    
+    let itemsHtml = p.detalle.map(item => `
+      <div class="item-row">
+        <span>${item.q}x ${item.n}</span>
+        <span>$${item.v.toLocaleString()}</span>
+      </div>
+    `).join('');
+
+    htmlFinal += `
+      <li class="${esPrimero ? 'primero' : ''}">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <b style="font-size:1.2em;">Pedido #${p.numero}</b>
+          <span style="font-size:0.85em;">${p.hora}</span>
         </div>
         
-        <div style="margin-top: 5px;">
+        <div style="margin: 8px 0;">
           ${p.nombre ? `<b>Cliente:</b> ${p.nombre}<br>` : ''}
-          ${p.direccion ? `<b>Dir:</b> ${p.direccion}<br>` : ''}
+          ${p.direccion ? `<b>Dir:</b> ${p.direccion}` : ''}
         </div>
 
-        ${ticketHtml}
+        <div class="ticket">${itemsHtml}</div>
 
-        <div style="display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 15px;">
-          <b>TOTAL:</b>
-          <b>$${p.total}</b>
+        <div style="display:flex; justify-content:space-between; font-size:1.2em; font-weight:bold;">
+          <span>TOTAL:</span>
+          <span>$${p.total.toLocaleString()}</span>
         </div>
 
-        <div style="display: flex; gap: 10px;">
-            <button class="listo" onclick="eliminar('${p.id}')">✔️ Listo</button>
-            <button class="cancelar" onclick="eliminar('${p.id}')">❌ Cancelar</button>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+          <button class="listo" onclick="eliminar('${d.id}')">✔️ Listo</button>
+          <button class="cancelar" onclick="eliminar('${d.id}')">❌ Borrar</button>
         </div>
       </li>
     `;
   });
 
-  document.getElementById("info").innerText =
-    pedidos.length ? "Siguiente pedido #" + (pedidos[pedidos.length-1].numero + 1)
-                   : "Siguiente pedido #1";
+  lista.innerHTML = htmlFinal; // Inyectamos todo de una sola vez
+  
+  const ultimoNum = snap.empty ? 0 : snap.docs[snap.docs.length-1].data().numero;
+  document.getElementById("info").innerText = "Siguiente pedido #" + (ultimoNum + 1);
 });
 </script>
 
