@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chorigrill 🔥</title>
 
 <style>
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #000;
   color: white;
 }
@@ -22,12 +23,9 @@ h1 {
   padding: 15px;
 }
 
+/* Se eliminaron los bordes y fondos extra del bloque para evitar los recuadros dobles */
 .bloque {
-  background: #111;
-  border: 2px solid orange;
-  padding: 12px;
   margin: 10px 0;
-  border-radius: 10px;
 }
 
 input {
@@ -38,15 +36,20 @@ input {
   border: 2px solid orange;
   color: white;
   font-size: 16px;
+  box-sizing: border-box; /* Asegura que el padding no desborde el ancho */
+  border-radius: 5px;
 }
 
 select {
   width: 100%;
   padding: 12px;
+  margin-top: 5px;
   background: black;
   border: 2px solid orange;
   color: white;
   font-size: 16px;
+  box-sizing: border-box;
+  border-radius: 5px;
 }
 
 button {
@@ -55,8 +58,9 @@ button {
   font-size: 18px;
   border: none;
   border-radius: 10px;
-  margin-top: 10px;
+  margin-top: 15px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .enviar {
@@ -67,16 +71,19 @@ button {
 .listo {
   background: green;
   color: white;
+  margin-top: 5px;
 }
 
 .cancelar {
   background: red;
   color: white;
+  margin-top: 5px;
 }
 
 ul {
   list-style: none;
   padding: 10px;
+  margin: 0;
 }
 
 li {
@@ -88,8 +95,12 @@ li {
 }
 
 .primero {
-  background: orange;
+  background: #ffaa00; /* Un naranja un poco más suave */
   color: black;
+}
+
+.primero .ticket-line {
+  border-color: black !important; /* Para que las líneas punteadas resalten en el primer pedido */
 }
 </style>
 </head>
@@ -100,42 +111,42 @@ li {
 
 <div class="container">
 
-<div class="bloque">
-<p id="info"></p>
+  <div class="bloque">
+    <p id="info" style="text-align: center; font-weight: bold; color: orange; font-size: 18px; margin: 0;"></p>
+  </div>
+
+  <div class="bloque">
+    <input id="nombre" placeholder="Nombre">
+  </div>
+
+  <div class="bloque">
+    <input id="direccion" placeholder="Dirección (opcional)">
+  </div>
+
+  <div class="bloque">
+    <input type="number" id="pechuga" placeholder="Pechuga ($12.000)">
+    <input type="number" id="carne" placeholder="Carne ($12.000)">
+    <input type="number" id="lomo" placeholder="Lomo ($12.000)">
+    <input type="number" id="sopa" placeholder="Sopa ($4.000)">
+    <input type="number" id="arroz" placeholder="Arroz ($1.000)">
+  </div>
+
+  <div class="bloque">
+    <input type="number" id="bebida" placeholder="Bebida (Ingresar precio)">
+  </div>
+
+  <div class="bloque">
+    <select id="tipo">
+      <option value="0">Aquí</option>
+      <option value="3000">Para llevar (+ extra $3.000)</option>
+    </select>
+  </div>
+
+  <button class="enviar" onclick="agregarPedido()">Enviar Pedido</button>
+
 </div>
 
-<div class="bloque">
-<input id="nombre" placeholder="Nombre">
-</div>
-
-<div class="bloque">
-<input id="direccion" placeholder="Dirección (opcional)">
-</div>
-
-<div class="bloque">
-<input type="number" id="pechuga" placeholder="Pechuga">
-<input type="number" id="carne" placeholder="Carne">
-<input type="number" id="lomo" placeholder="Lomo">
-<input type="number" id="sopa" placeholder="Sopa">
-<input type="number" id="arroz" placeholder="Arroz">
-</div>
-
-<div class="bloque">
-<input type="number" id="bebida" placeholder="Bebida (precio)">
-</div>
-
-<div class="bloque">
-<select id="tipo">
-  <option value="0">Aquí</option>
-  <option value="3000">Para llevar (+ extra)</option>
-</select>
-</div>
-
-<button class="enviar" onclick="agregarPedido()">Enviar Pedido</button>
-
-</div>
-
-<h2 style="text-align:center;">Pedidos</h2>
+<h2 style="text-align:center;">Pedidos Activos</h2>
 <ul id="lista"></ul>
 
 <script type="module">
@@ -151,7 +162,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// número automático
+// Obtener número automático
 async function generarNumero() {
   const snap = await getDocs(collection(db, "pedidos"));
   if (snap.empty) return 1;
@@ -164,7 +175,7 @@ async function generarNumero() {
   return max + 1;
 }
 
-// agregar pedido
+// Agregar pedido a la base de datos
 window.agregarPedido = async function() {
   const numero = await generarNumero();
 
@@ -183,27 +194,41 @@ window.agregarPedido = async function() {
   const bebida = Number(document.getElementById("bebida").value) || 0;
   const extra = Number(document.getElementById("tipo").value);
 
-  const total =
-    (p * 12000) +
-    (c * 12000) +
-    (l * 12000) +
-    (s * 4000) +
-    (a * 1000) +
-    bebida +
-    extra;
+  // Crear un arreglo con el detalle de los productos para la factura
+  const detalle = [];
+  if (p > 0) detalle.push({ nombre: "Pechuga", cant: p, precio: p * 12000 });
+  if (c > 0) detalle.push({ nombre: "Carne", cant: c, precio: c * 12000 });
+  if (l > 0) detalle.push({ nombre: "Lomo", cant: l, precio: l * 12000 });
+  if (s > 0) detalle.push({ nombre: "Sopa", cant: s, precio: s * 4000 });
+  if (a > 0) detalle.push({ nombre: "Arroz", cant: a, precio: a * 1000 });
+  if (bebida > 0) detalle.push({ nombre: "Bebida", cant: 1, precio: bebida });
+  if (extra > 0) detalle.push({ nombre: "Empaque/Domicilio", cant: 1, precio: extra });
+
+  // Calcular el total basado en los detalles
+  const total = detalle.reduce((acc, item) => acc + item.precio, 0);
+
+  // Solo enviar si hay un total mayor a 0 o un nombre (evita pedidos vacíos por error)
+  if (total === 0 && !nombre) {
+      alert("Por favor agrega al menos un producto o nombre al pedido.");
+      return;
+  }
 
   await addDoc(collection(db, "pedidos"), {
     numero, nombre, direccion,
-    total, fecha, hora
+    detalle, total, fecha, hora
   });
+
+  // Limpiar campos después de enviar
+  document.querySelectorAll("input").forEach(input => input.value = "");
+  document.getElementById("tipo").value = "0";
 };
 
-// eliminar
+// Eliminar / Completar pedido
 window.eliminar = async function(id) {
   await deleteDoc(doc(db, "pedidos", id));
 };
 
-// tiempo real
+// Leer en tiempo real
 onSnapshot(collection(db, "pedidos"), (snap) => {
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
@@ -215,15 +240,47 @@ onSnapshot(collection(db, "pedidos"), (snap) => {
   pedidos.sort((a,b)=>a.numero-b.numero);
 
   pedidos.forEach((p,i) => {
-    lista.innerHTML += `
-      <li class="${i===0?'primero':''}">
-        <b>Pedido #${p.numero}</b><br>
-        ${p.nombre || ''}<br>
-        ${p.fecha} ${p.hora}<br>
-        Total: $${p.total}<br><br>
+    
+    // Construir la sección del recibo/factura
+    let ticketHtml = "";
+    if (p.detalle && p.detalle.length > 0) {
+      ticketHtml += `<div class="ticket-line" style="border-top: 2px dashed gray; border-bottom: 2px dashed gray; margin: 10px 0; padding: 10px 0; font-family: monospace; font-size: 15px;">`;
+      
+      p.detalle.forEach(item => {
+        ticketHtml += `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span>${item.cant}x ${item.nombre}</span>
+            <span>$${item.precio}</span>
+          </div>
+        `;
+      });
+      
+      ticketHtml += `</div>`;
+    }
 
-        <button class="listo" onclick="eliminar('${p.id}')">Listo</button>
-        <button class="cancelar" onclick="eliminar('${p.id}')">Cancelar</button>
+    lista.innerHTML += `
+      <li class="${i===0 ? 'primero' : ''}">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <b style="font-size: 20px;">Pedido #${p.numero}</b>
+          <span style="font-size: 12px; opacity: 0.8;">${p.hora}</span>
+        </div>
+        
+        <div style="margin-top: 5px;">
+          ${p.nombre ? `<b>Cliente:</b> ${p.nombre}<br>` : ''}
+          ${p.direccion ? `<b>Dir:</b> ${p.direccion}<br>` : ''}
+        </div>
+
+        ${ticketHtml}
+
+        <div style="display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 15px;">
+          <b>TOTAL:</b>
+          <b>$${p.total}</b>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button class="listo" onclick="eliminar('${p.id}')">✔️ Listo</button>
+            <button class="cancelar" onclick="eliminar('${p.id}')">❌ Cancelar</button>
+        </div>
       </li>
     `;
   });
