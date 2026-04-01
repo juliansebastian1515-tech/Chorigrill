@@ -6,64 +6,89 @@
 
 <style>
 body {
+  margin: 0;
   font-family: Arial;
-  background: #111;
+  background: #000;
   color: white;
-  text-align: center;
 }
 
 h1 {
-  margin-top: 10px;
+  text-align: center;
+  color: orange;
+  font-size: 32px;
 }
 
 .container {
-  background: #fff;
-  color: black;
-  width: 320px;
-  margin: auto;
   padding: 15px;
+}
+
+.bloque {
+  background: #111;
+  border: 2px solid orange;
+  padding: 12px;
+  margin: 10px 0;
   border-radius: 10px;
 }
 
 input {
-  width: 90%;
-  padding: 8px;
-  margin: 5px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 5px;
+  background: black;
+  border: 2px solid orange;
+  color: white;
+  font-size: 16px;
 }
 
 select {
-  padding: 6px;
-  margin: 5px;
+  width: 100%;
+  padding: 12px;
+  background: black;
+  border: 2px solid orange;
+  color: white;
+  font-size: 16px;
 }
 
 button {
-  padding: 8px;
-  margin: 5px;
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  border: none;
+  border-radius: 10px;
+  margin-top: 10px;
   cursor: pointer;
 }
 
 .enviar {
+  background: orange;
+  color: black;
+}
+
+.listo {
   background: green;
   color: white;
 }
 
-.listo { background: green; color: white; }
-.cancelar { background: red; color: white; }
+.cancelar {
+  background: red;
+  color: white;
+}
 
 ul {
   list-style: none;
-  padding: 0;
+  padding: 10px;
 }
 
 li {
-  background: #222;
-  margin: 10px;
-  padding: 10px;
+  background: #111;
+  border: 2px solid orange;
+  margin: 10px 0;
+  padding: 15px;
   border-radius: 10px;
 }
 
 .primero {
-  background: yellow;
+  background: orange;
   color: black;
 }
 </style>
@@ -71,37 +96,46 @@ li {
 
 <body>
 
-<h1>Chorigrill 🔥</h1>
+<h1>🔥 Chorigrill</h1>
 
 <div class="container">
 
+<div class="bloque">
 <p id="info"></p>
+</div>
 
+<div class="bloque">
 <input id="nombre" placeholder="Nombre">
+</div>
+
+<div class="bloque">
 <input id="direccion" placeholder="Dirección (opcional)">
+</div>
 
-<br>
-
+<div class="bloque">
 <input type="number" id="pechuga" placeholder="Pechuga">
 <input type="number" id="carne" placeholder="Carne">
 <input type="number" id="lomo" placeholder="Lomo">
 <input type="number" id="sopa" placeholder="Sopa">
 <input type="number" id="arroz" placeholder="Arroz">
+</div>
 
-<br>
+<div class="bloque">
+<input type="number" id="bebida" placeholder="Bebida (precio)">
+</div>
 
+<div class="bloque">
 <select id="tipo">
   <option value="0">Aquí</option>
-  <option value="3000">Para llevar (+ bebida)</option>
+  <option value="3000">Para llevar (+ extra)</option>
 </select>
-
-<br>
+</div>
 
 <button class="enviar" onclick="agregarPedido()">Enviar Pedido</button>
 
 </div>
 
-<h2>Pedidos</h2>
+<h2 style="text-align:center;">Pedidos</h2>
 <ul id="lista"></ul>
 
 <script type="module">
@@ -117,7 +151,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 número automático
+// número automático
 async function generarNumero() {
   const snap = await getDocs(collection(db, "pedidos"));
   if (snap.empty) return 1;
@@ -130,7 +164,7 @@ async function generarNumero() {
   return max + 1;
 }
 
-// 🔥 agregar pedido
+// agregar pedido
 window.agregarPedido = async function() {
   const numero = await generarNumero();
 
@@ -146,6 +180,7 @@ window.agregarPedido = async function() {
   const l = Number(document.getElementById("lomo").value) || 0;
   const s = Number(document.getElementById("sopa").value) || 0;
   const a = Number(document.getElementById("arroz").value) || 0;
+  const bebida = Number(document.getElementById("bebida").value) || 0;
   const extra = Number(document.getElementById("tipo").value);
 
   const total =
@@ -154,23 +189,21 @@ window.agregarPedido = async function() {
     (l * 12000) +
     (s * 4000) +
     (a * 1000) +
+    bebida +
     extra;
 
   await addDoc(collection(db, "pedidos"), {
     numero, nombre, direccion,
-    p, c, l, s, a,
-    total,
-    fecha,
-    hora
+    total, fecha, hora
   });
 };
 
-// 🔥 eliminar
+// eliminar
 window.eliminar = async function(id) {
   await deleteDoc(doc(db, "pedidos", id));
 };
 
-// 🔥 tiempo real
+// tiempo real
 onSnapshot(collection(db, "pedidos"), (snap) => {
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
@@ -184,7 +217,8 @@ onSnapshot(collection(db, "pedidos"), (snap) => {
   pedidos.forEach((p,i) => {
     lista.innerHTML += `
       <li class="${i===0?'primero':''}">
-        <b>#${p.numero}</b> - ${p.nombre || ''}<br>
+        <b>Pedido #${p.numero}</b><br>
+        ${p.nombre || ''}<br>
         ${p.fecha} ${p.hora}<br>
         Total: $${p.total}<br><br>
 
@@ -195,8 +229,8 @@ onSnapshot(collection(db, "pedidos"), (snap) => {
   });
 
   document.getElementById("info").innerText =
-    pedidos.length ? "Pedido #" + (pedidos[pedidos.length-1].numero + 1)
-                   : "Pedido #1";
+    pedidos.length ? "Siguiente pedido #" + (pedidos[pedidos.length-1].numero + 1)
+                   : "Siguiente pedido #1";
 });
 </script>
 
