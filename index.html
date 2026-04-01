@@ -1,150 +1,42 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>CHORIGRILL 🔥</title>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1f1f1f, #2c2c2c);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
+    authDomain: "chorigrill-9d0e9.firebaseapp.com",
+    projectId: "chorigrill-9d0e9",
+    storageBucket: "chorigrill-9d0e9.firebasestorage.app",
+    messagingSenderId: "548842416171",
+    appId: "1:548842416171:web:8ccb91cec236faa957226e",
+    measurementId: "G-E5WDR5Y0MM"
+  };
 
-    .container {
-      background: #2a2a2a;
-      padding: 25px;
-      border-radius: 15px;
-      width: 350px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
+  // Inicializar Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    h1 {
-      text-align: center;
-      color: #ff7b00;
-      margin-bottom: 20px;
-    }
+  // 🔥 GUARDAR PEDIDO
+  window.guardarPedido = async function(pedido) {
+    await addDoc(collection(db, "pedidos"), pedido);
+  };
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      background: #1f1f1f;
-      color: white;
-    }
-
-    input::placeholder {
-      color: #aaa;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #ff7b00;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #ff9a2a;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 15px;
-    }
-
-    li {
-      background: #1f1f1f;
-      padding: 10px;
-      margin-bottom: 8px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .precio {
-      color: #00ffae;
-      font-weight: bold;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="container">
-    <h1>🔥 CHORIGRILL</h1>
-
-    <input type="text" id="nombre" placeholder="🍔 Producto">
-    <input type="number" id="precio" placeholder="💲 Precio">
-
-    <button onclick="agregarPedido()">Agregar Pedido</button>
-
-    <ul id="listaPedidos"></ul>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
-      authDomain: "chorigrill-9d0e9.firebaseapp.com",
-      projectId: "chorigrill-9d0e9",
-      storageBucket: "chorigrill-9d0e9.firebasestorage.app",
-      messagingSenderId: "548842416171",
-      appId: "1:548842416171:web:8ccb91cec236faa957226e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    window.agregarPedido = async function() {
-      const nombre = document.getElementById("nombre").value;
-      const precio = document.getElementById("precio").value;
-
-      if (!nombre || !precio) {
-        alert("Completa los datos");
-        return;
-      }
-
-      await addDoc(collection(db, "pedidos"), {
-        nombre: nombre,
-        total: Number(precio)
-      });
-
-      document.getElementById("nombre").value = "";
-      document.getElementById("precio").value = "";
-    };
-
-    onSnapshot(collection(db, "pedidos"), (snapshot) => {
-      const lista = document.getElementById("listaPedidos");
-      lista.innerHTML = "";
-
-      snapshot.forEach(doc => {
-        const pedido = doc.data();
-        lista.innerHTML += `
-          <li>
-            <span>${pedido.nombre}</span>
-            <span class="precio">$${pedido.total}</span>
-          </li>
-        `;
-      });
+  // 🔥 ESCUCHAR PEDIDOS EN TIEMPO REAL
+  onSnapshot(collection(db, "pedidos"), (snapshot) => {
+    const pedidos = [];
+    snapshot.forEach(doc => {
+      pedidos.push({ id: doc.id, ...doc.data() });
     });
-  </script>
 
-</body>
-</html>
+    console.log("Pedidos en vivo:", pedidos);
+
+    // Aquí puedes mostrarlo en tu HTML
+    const lista = document.getElementById("listaPedidos");
+    if (lista) {
+      lista.innerHTML = "";
+      pedidos.forEach(p => {
+        lista.innerHTML += `<li>${p.nombre} - $${p.total}</li>`;
+      });
+    }
+  });
+</script>
