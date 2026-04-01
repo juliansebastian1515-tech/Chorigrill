@@ -49,6 +49,7 @@ li {
 
   <div class="bloque">
     <input id="nombre" type="text" placeholder="Nombre del cliente" autocomplete="off">
+    <input type="number" id="pechuga" placeholder="Cantidad Pechuga ($12k)" autocomplete="off" inputmode="numeric">
     <input id="direccion" type="text" placeholder="Dirección (opcional)" autocomplete="off">
   </div>
 
@@ -132,16 +133,27 @@ onSnapshot(q, (snap) => {
   });
 
   lista.innerHTML = html;
-  document.getElementById("info").innerText = "SIGUIENTE: #" + contador;
 });
 
 // 🧹 LIMPIAR
 function limpiar() {
-  ["nombre","direccion","pechuga","carne","lomo","sopa","arroz","bebida"]
-  .forEach(id => document.getElementById(id).value = "");
+  const form = document.querySelector(".container");
+
+  form.querySelectorAll("input").forEach(input => {
+    input.value = "";
+    input.setAttribute("value", "");
+  });
 
   document.getElementById("tipo").selectedIndex = 0;
+
+  // 🔥 CLAVE PARA IPHONE
   document.activeElement.blur();
+
+  // 🔥 FORZAR RE-RENDER (hack real)
+  form.style.display = "none";
+  setTimeout(() => {
+    form.style.display = "block";
+  }, 10);
 }
 
 // 🚀 AGREGAR PEDIDO RÁPIDO
@@ -191,12 +203,19 @@ window.agregarPedido = async function() {
     hora: ahora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
   });
 
-  limpiar();
+limpiar(); // limpia antes (por si acaso)
 
-  btn.disabled = false;
-  btn.innerText = "ENVIAR PEDIDO";
-  btn.style.opacity = "1";
-};
+await addDoc(collection(db, "pedidos"), {
+  numero: contador,
+  nombre: nombre.value,
+  direccion: direccion.value,
+  detalle,
+  total,
+  fecha: ahora.toLocaleDateString(),
+  hora: ahora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+});
+
+limpiar(); // limpia después (definitivo)
 
 // eliminar
 window.eliminar = async (id) => await deleteDoc(doc(db, "pedidos", id));
