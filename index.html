@@ -1,42 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>CHORIGRILL 🔥</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #121212;
+  color: white;
+  text-align: center;
+}
+
+h1 {
+  color: orange;
+}
+
+.panel {
+  background: #1e1e1e;
+  padding: 15px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+select, input {
+  padding: 8px;
+  margin: 5px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  padding: 8px 12px;
+  margin: 5px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.agregar { background: orange; color: black; }
+.listo { background: green; color: white; }
+.cancelar { background: red; color: white; }
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: #1f1f1f;
+  margin: 10px auto;
+  padding: 12px;
+  border-radius: 10px;
+  width: 300px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔥 CHORIGRILL</h1>
+
+<div class="panel">
+
+<select id="producto">
+  <option value="10000">Chorizo sencillo - $10.000</option>
+  <option value="15000">Chorizo especial - $15.000</option>
+</select>
+
+<br>
+
+<input type="number" id="cantidad" placeholder="Cantidad" min="1">
+
+<br>
+
+<select id="tipo">
+  <option value="0">Para aquí</option>
+  <option value="3000">Para llevar (+ bebida)</option>
+</select>
+
+<br>
+
+<button class="agregar" onclick="agregarPedido()">Agregar Pedido</button>
+
+</div>
+
+<h2>Pedidos</h2>
+<ul id="listaPedidos"></ul>
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
-    authDomain: "chorigrill-9d0e9.firebaseapp.com",
-    projectId: "chorigrill-9d0e9",
-    storageBucket: "chorigrill-9d0e9.firebasestorage.app",
-    messagingSenderId: "548842416171",
-    appId: "1:548842416171:web:8ccb91cec236faa957226e",
-    measurementId: "G-E5WDR5Y0MM"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
+  authDomain: "chorigrill-9d0e9.firebaseapp.com",
+  projectId: "chorigrill-9d0e9",
+  storageBucket: "chorigrill-9d0e9.firebasestorage.app",
+  messagingSenderId: "548842416171",
+  appId: "1:548842416171:web:8ccb91cec236faa957226e"
+};
 
-  // Inicializar Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  // 🔥 GUARDAR PEDIDO
-  window.guardarPedido = async function(pedido) {
-    await addDoc(collection(db, "pedidos"), pedido);
-  };
+// 🔥 GENERAR NÚMERO DE PEDIDO
+async function generarNumeroPedido() {
+  const snapshot = await getDocs(collection(db, "pedidos"));
+  
+  if (snapshot.empty) return 1;
 
-  // 🔥 ESCUCHAR PEDIDOS EN TIEMPO REAL
-  onSnapshot(collection(db, "pedidos"), (snapshot) => {
-    const pedidos = [];
-    snapshot.forEach(doc => {
-      pedidos.push({ id: doc.id, ...doc.data() });
-    });
-
-    console.log("Pedidos en vivo:", pedidos);
-
-    // Aquí puedes mostrarlo en tu HTML
-    const lista = document.getElementById("listaPedidos");
-    if (lista) {
-      lista.innerHTML = "";
-      pedidos.forEach(p => {
-        lista.innerHTML += `<li>${p.nombre} - $${p.total}</li>`;
-      });
-    }
+  let max = 0;
+  snapshot.forEach(doc => {
+    const num = doc.data().numero || 0;
+    if (num > max) max = num;
   });
+
+  return max + 1;
+}
+
+// 🔥 AGREGAR PEDIDO
+window.agregarPedido = async function() {
+  const precioBase = Number(document.getElementById("producto").value);
+  const cantidad = Number(document.getElementById("cantidad").value);
+  const extra = Number(document.getElementById("tipo").value);
+
+  if (!cantidad) return alert("Ingresa cantidad");
+
+  const total = (precioBase * cantidad) + extra;
+  const numero = await generarNumeroPedido();
+
+  const ahora = new Date();
+  const fecha = ahora.toLocaleDateString();
+  const hora = ahora.toLocaleTimeString();
+
+  await addDoc(collection(db, "pedidos"), {
+    numero,
+    cantidad,
+    total,
+    fecha,
+    hora
+  });
+};
+
+// 🔥 ELIMINAR (LISTO Y CANCELAR)
+window.eliminarPedido = async function(id) {
+  await deleteDoc(doc(db, "pedidos", id));
+};
+
+// 🔥 TIEMPO REAL
+onSnapshot(collection(db, "pedidos"), (snapshot) => {
+  const lista = document.getElementById("listaPedidos");
+  lista.innerHTML = "";
+
+  const pedidos = [];
+
+  snapshot.forEach(docu => {
+    pedidos.push({ id: docu.id, ...docu.data() });
+  });
+
+  // ordenar por número
+  pedidos.sort((a, b) => a.numero - b.numero);
+
+  pedidos.forEach(p => {
+    lista.innerHTML += `
+      <li>
+        <strong>Pedido #${p.numero}</strong><br>
+        Cantidad: ${p.cantidad}<br>
+        Total: $${p.total}<br>
+        ${p.fecha} - ${p.hora}<br><br>
+
+        <button class="listo" onclick="eliminarPedido('${p.id}')">Listo</button>
+        <button class="cancelar" onclick="eliminarPedido('${p.id}')">Cancelar</button>
+      </li>
+    `;
+  });
+});
 </script>
+
+</body>
+</html>
