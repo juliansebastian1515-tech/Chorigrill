@@ -10,8 +10,7 @@ body { margin: 0; font-family: sans-serif; background: #000; color: white; }
 h1 { text-align: center; color: orange; margin-top: 20px; }
 .container { padding: 15px; max-width: 500px; margin: auto; }
 
-/* Eliminación de bordes exteriores (pedidos por el usuario) */
-.bloque { margin-bottom: 10px; border: none; background: transparent; padding: 0; }
+.bloque { margin-bottom: 10px; }
 
 input, select {
   width: 100%; padding: 14px; margin-top: 8px;
@@ -45,7 +44,7 @@ li {
 
 <h1>🔥 Chorigrill</h1>
 
-<div class="container" id="formulario">
+<div class="container">
   <p id="info" style="text-align: center; font-weight: bold; color: orange; font-size: 1.2em;"></p>
 
   <div class="bloque">
@@ -54,30 +53,30 @@ li {
   </div>
 
   <div class="bloque">
-    <input type="number" id="pechuga" placeholder="Cantidad Pechuga ($12k)" min="0">
-    <input type="number" id="carne" placeholder="Cantidad Carne ($12k)" min="0">
-    <input type="number" id="lomo" placeholder="Cantidad Lomo ($12k)" min="0">
-    <input type="number" id="sopa" placeholder="Cantidad Sopa ($4k)" min="0">
-    <input type="number" id="arroz" placeholder="Cantidad Arroz ($1k)" min="0">
-    <input type="number" id="bebida" placeholder="Precio de Bebida ($)" min="0">
+    <input type="number" id="pechuga" placeholder="Cantidad Pechuga ($12k)">
+    <input type="number" id="carne" placeholder="Cantidad Carne ($12k)">
+    <input type="number" id="lomo" placeholder="Cantidad Lomo ($12k)">
+    <input type="number" id="sopa" placeholder="Cantidad Sopa ($4k)">
+    <input type="number" id="arroz" placeholder="Cantidad Arroz ($1k)">
+    <input type="number" id="bebida" placeholder="Precio de Bebida">
   </div>
 
   <div class="bloque">
     <select id="tipo">
-      <option value="0">Consumo en local (Aquí)</option>
-      <option value="3000">Para llevar / Domicilio (+$3.000)</option>
+      <option value="0">Aquí</option>
+      <option value="3000">Para llevar (+$3.000)</option>
     </select>
   </div>
 
   <button class="enviar" id="btnEnviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
 </div>
 
-<h2 style="text-align:center; color: orange;">Pedidos en Cocina</h2>
+<h2 style="text-align:center; color: orange;">Pedidos</h2>
 <ul id="lista"></ul>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
@@ -88,92 +87,25 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// FUNCIÓN CLAVE: Limpieza total forzada
-function resetearTodo() {
-    const campos = ["nombre", "direccion", "pechuga", "carne", "lomo", "sopa", "arroz", "bebida"];
-    campos.forEach(id => {
-        const el = document.getElementById(id);
-        el.value = ""; // Borra el contenido
-        el.defaultValue = ""; // Resetea el valor interno del DOM
-    });
-    document.getElementById("tipo").selectedIndex = 0;
-    console.log("Formulario limpiado");
-}
+// 🔥 CONTADOR EN TIEMPO REAL (RÁPIDO)
+let contador = 1;
 
-async function obtenerSiguienteNumero() {
-  const snap = await getDocs(collection(db, "pedidos"));
-  let max = 0;
-  snap.forEach(d => { if (d.data().numero > max) max = d.data().numero; });
-  return max + 1;
-}
-
-window.agregarPedido = async function() {
-  const btn = document.getElementById("btnEnviar");
-  const nombreCli = document.getElementById("nombre").value;
-  
-  btn.disabled = true;
-  btn.innerText = "PROCESANDO...";
-
-  const p = Number(document.getElementById("pechuga").value) || 0;
-  const c = Number(document.getElementById("carne").value) || 0;
-  const l = Number(document.getElementById("lomo").value) || 0;
-  const s = Number(document.getElementById("sopa").value) || 0;
-  const a = Number(document.getElementById("arroz").value) || 0;
-  const b = Number(document.getElementById("bebida").value) || 0;
-  const extra = Number(document.getElementById("tipo").value);
-
-  const detalle = [];
-  if (p > 0) detalle.push({ n: "Pechuga", q: p, v: p * 12000 });
-  if (c > 0) detalle.push({ n: "Carne", q: c, v: c * 12000 });
-  if (l > 0) detalle.push({ n: "Lomo", q: l, v: l * 12000 });
-  if (s > 0) detalle.push({ n: "Sopa", q: s, v: s * 4000 });
-  if (a > 0) detalle.push({ n: "Arroz", q: a, v: a * 1000 });
-  if (b > 0) detalle.push({ n: "Bebida", q: 1, v: b });
-  if (extra > 0) detalle.push({ n: "Domicilio/Empaque", q: 1, v: extra });
-
-  const total = detalle.reduce((acc, i) => acc + i.v, 0);
-
-  if (total === 0) {
-      alert("Agrega productos al pedido.");
-      btn.disabled = false;
-      btn.innerText = "ENVIAR PEDIDO";
-      return;
-  }
-
-  const numero = await obtenerSiguienteNumero();
-  const ahora = new Date();
-
-  try {
-    await addDoc(collection(db, "pedidos"), {
-      numero,
-      nombre: nombreCli,
-      direccion: document.getElementById("direccion").value,
-      detalle,
-      total,
-      fecha: ahora.toLocaleDateString(),
-      hora: ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    });
-
-    resetearTodo(); // SE LLAMA AQUÍ DESPUÉS DEL ÉXITO
-    
-  } catch (error) {
-    alert("Error al enviar: " + error.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "ENVIAR PEDIDO";
-  }
-};
-
-window.eliminar = async (id) => await deleteDoc(doc(db, "pedidos", id));
-
-// Renderizado rápido
 const q = query(collection(db, "pedidos"), orderBy("numero", "asc"));
+
 onSnapshot(q, (snap) => {
   const lista = document.getElementById("lista");
-  let listadoHtml = "";
-  
-  snap.forEach((d) => {
+  let html = "";
+
+  if (snap.empty) {
+    contador = 1;
+  } else {
+    const ultimo = snap.docs[snap.docs.length - 1].data().numero;
+    contador = ultimo + 1;
+  }
+
+  snap.forEach((d, index) => {
     const p = d.data();
+
     const items = p.detalle.map(i => `
       <div class="item-row">
         <span>${i.q}x ${i.n}</span>
@@ -181,27 +113,94 @@ onSnapshot(q, (snap) => {
       </div>
     `).join('');
 
-    listadoHtml += `
-      <li class="${listadoHtml === "" ? 'primero' : ''}">
-        <b>Pedido #${p.numero}</b> - <small>${p.hora}</small><br>
+    html += `
+      <li class="${index === 0 ? 'primero' : ''}">
+        <b>Pedido #${p.numero}</b> - ${p.hora}<br>
         ${p.nombre ? `Cliente: ${p.nombre}<br>` : ''}
         ${p.direccion ? `Dir: ${p.direccion}<br>` : ''}
+
         <div class="ticket">${items}</div>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1em;">
-          <span>TOTAL:</span><span>$${p.total.toLocaleString()}</span>
-        </div>
+
+        <b>Total: $${p.total.toLocaleString()}</b>
+
         <div style="display:flex; gap:10px; margin-top:10px;">
           <button class="listo" onclick="eliminar('${d.id}')">Listo</button>
-          <button class="cancelar" onclick="eliminar('${d.id}')">Borrar</button>
+          <button class="cancelar" onclick="eliminar('${d.id}')">Cancelar</button>
         </div>
       </li>
     `;
   });
-  
-  lista.innerHTML = listadoHtml;
-  const sig = snap.empty ? 1 : snap.docs[snap.docs.length-1].data().numero + 1;
-  document.getElementById("info").innerText = "SIGUIENTE: #" + sig;
+
+  lista.innerHTML = html;
+  document.getElementById("info").innerText = "SIGUIENTE: #" + contador;
 });
+
+// 🧹 LIMPIAR
+function limpiar() {
+  ["nombre","direccion","pechuga","carne","lomo","sopa","arroz","bebida"]
+  .forEach(id => document.getElementById(id).value = "");
+
+  document.getElementById("tipo").selectedIndex = 0;
+  document.activeElement.blur();
+}
+
+// 🚀 AGREGAR PEDIDO RÁPIDO
+window.agregarPedido = async function() {
+  const btn = document.getElementById("btnEnviar");
+  btn.disabled = true;
+  btn.innerText = "ENVIANDO...";
+  btn.style.opacity = "0.6";
+
+  const p = Number(pechuga.value) || 0;
+  const c = Number(carne.value) || 0;
+  const l = Number(lomo.value) || 0;
+  const s = Number(sopa.value) || 0;
+  const a = Number(arroz.value) || 0;
+  const b = Number(bebida.value) || 0;
+  const extra = Number(tipo.value);
+
+  const detalle = [];
+
+  if (p) detalle.push({ n: "Pechuga", q: p, v: p * 12000 });
+  if (c) detalle.push({ n: "Carne", q: c, v: c * 12000 });
+  if (l) detalle.push({ n: "Lomo", q: l, v: l * 12000 });
+  if (s) detalle.push({ n: "Sopa", q: s, v: s * 4000 });
+  if (a) detalle.push({ n: "Arroz", q: a, v: a * 1000 });
+  if (b) detalle.push({ n: "Bebida", q: 1, v: b });
+  if (extra) detalle.push({ n: "Domicilio", q: 1, v: extra });
+
+  const total = detalle.reduce((acc, i) => acc + i.v, 0);
+
+  if (!total) {
+    alert("Agrega productos");
+    btn.disabled = false;
+    btn.innerText = "ENVIAR PEDIDO";
+    btn.style.opacity = "1";
+    return;
+  }
+
+  const ahora = new Date();
+
+  await addDoc(collection(db, "pedidos"), {
+    numero: contador,
+    nombre: nombre.value,
+    direccion: direccion.value,
+    detalle,
+    total,
+    fecha: ahora.toLocaleDateString(),
+    hora: ahora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+  });
+
+  limpiar();
+
+  btn.disabled = false;
+  btn.innerText = "ENVIAR PEDIDO";
+  btn.style.opacity = "1";
+};
+
+// eliminar
+window.eliminar = async (id) => await deleteDoc(doc(db, "pedidos", id));
+
 </script>
 
 </body>
