@@ -2,45 +2,51 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>CHORIGRILL 🔥</title>
+<title>Chorigrill 🔥</title>
 
 <style>
 body {
   font-family: Arial;
-  background: #121212;
+  background: #111;
   color: white;
   text-align: center;
 }
 
 h1 {
-  color: orange;
+  margin-top: 10px;
 }
 
-.panel {
-  background: #1e1e1e;
+.container {
+  background: #fff;
+  color: black;
+  width: 320px;
+  margin: auto;
   padding: 15px;
   border-radius: 10px;
-  display: inline-block;
-  margin-bottom: 20px;
 }
 
-select, input {
+input {
+  width: 90%;
   padding: 8px;
   margin: 5px;
-  border-radius: 6px;
-  border: none;
+}
+
+select {
+  padding: 6px;
+  margin: 5px;
 }
 
 button {
-  padding: 8px 12px;
+  padding: 8px;
   margin: 5px;
-  border: none;
-  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
 }
 
-.agregar { background: orange; color: black; }
+.enviar {
+  background: green;
+  color: white;
+}
+
 .listo { background: green; color: white; }
 .cancelar { background: red; color: white; }
 
@@ -50,45 +56,53 @@ ul {
 }
 
 li {
-  background: #1f1f1f;
-  margin: 10px auto;
-  padding: 12px;
+  background: #222;
+  margin: 10px;
+  padding: 10px;
   border-radius: 10px;
-  width: 300px;
+}
+
+.primero {
+  background: yellow;
+  color: black;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🔥 CHORIGRILL</h1>
+<h1>Chorigrill 🔥</h1>
 
-<div class="panel">
+<div class="container">
 
-<select id="producto">
-  <option value="10000">Chorizo sencillo - $10.000</option>
-  <option value="15000">Chorizo especial - $15.000</option>
-</select>
+<p id="info"></p>
+
+<input id="nombre" placeholder="Nombre">
+<input id="direccion" placeholder="Dirección (opcional)">
 
 <br>
 
-<input type="number" id="cantidad" placeholder="Cantidad" min="1">
+<input type="number" id="pechuga" placeholder="Pechuga">
+<input type="number" id="carne" placeholder="Carne">
+<input type="number" id="lomo" placeholder="Lomo">
+<input type="number" id="sopa" placeholder="Sopa">
+<input type="number" id="arroz" placeholder="Arroz">
 
 <br>
 
 <select id="tipo">
-  <option value="0">Para aquí</option>
+  <option value="0">Aquí</option>
   <option value="3000">Para llevar (+ bebida)</option>
 </select>
 
 <br>
 
-<button class="agregar" onclick="agregarPedido()">Agregar Pedido</button>
+<button class="enviar" onclick="agregarPedido()">Enviar Pedido</button>
 
 </div>
 
 <h2>Pedidos</h2>
-<ul id="listaPedidos"></ul>
+<ul id="lista"></ul>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -97,86 +111,92 @@ import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs }
 const firebaseConfig = {
   apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
   authDomain: "chorigrill-9d0e9.firebaseapp.com",
-  projectId: "chorigrill-9d0e9",
-  storageBucket: "chorigrill-9d0e9.firebasestorage.app",
-  messagingSenderId: "548842416171",
-  appId: "1:548842416171:web:8ccb91cec236faa957226e"
+  projectId: "chorigrill-9d0e9"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 GENERAR NÚMERO DE PEDIDO
-async function generarNumeroPedido() {
-  const snapshot = await getDocs(collection(db, "pedidos"));
-  
-  if (snapshot.empty) return 1;
+// 🔥 número automático
+async function generarNumero() {
+  const snap = await getDocs(collection(db, "pedidos"));
+  if (snap.empty) return 1;
 
   let max = 0;
-  snapshot.forEach(doc => {
-    const num = doc.data().numero || 0;
-    if (num > max) max = num;
+  snap.forEach(d => {
+    if (d.data().numero > max) max = d.data().numero;
   });
 
   return max + 1;
 }
 
-// 🔥 AGREGAR PEDIDO
+// 🔥 agregar pedido
 window.agregarPedido = async function() {
-  const precioBase = Number(document.getElementById("producto").value);
-  const cantidad = Number(document.getElementById("cantidad").value);
-  const extra = Number(document.getElementById("tipo").value);
-
-  if (!cantidad) return alert("Ingresa cantidad");
-
-  const total = (precioBase * cantidad) + extra;
-  const numero = await generarNumeroPedido();
+  const numero = await generarNumero();
 
   const ahora = new Date();
   const fecha = ahora.toLocaleDateString();
   const hora = ahora.toLocaleTimeString();
 
+  const nombre = document.getElementById("nombre").value;
+  const direccion = document.getElementById("direccion").value;
+
+  const p = Number(document.getElementById("pechuga").value) || 0;
+  const c = Number(document.getElementById("carne").value) || 0;
+  const l = Number(document.getElementById("lomo").value) || 0;
+  const s = Number(document.getElementById("sopa").value) || 0;
+  const a = Number(document.getElementById("arroz").value) || 0;
+  const extra = Number(document.getElementById("tipo").value);
+
+  const total =
+    (p * 12000) +
+    (c * 12000) +
+    (l * 12000) +
+    (s * 4000) +
+    (a * 1000) +
+    extra;
+
   await addDoc(collection(db, "pedidos"), {
-    numero,
-    cantidad,
+    numero, nombre, direccion,
+    p, c, l, s, a,
     total,
     fecha,
     hora
   });
 };
 
-// 🔥 ELIMINAR (LISTO Y CANCELAR)
-window.eliminarPedido = async function(id) {
+// 🔥 eliminar
+window.eliminar = async function(id) {
   await deleteDoc(doc(db, "pedidos", id));
 };
 
-// 🔥 TIEMPO REAL
-onSnapshot(collection(db, "pedidos"), (snapshot) => {
-  const lista = document.getElementById("listaPedidos");
+// 🔥 tiempo real
+onSnapshot(collection(db, "pedidos"), (snap) => {
+  const lista = document.getElementById("lista");
   lista.innerHTML = "";
 
-  const pedidos = [];
+  let pedidos = [];
 
-  snapshot.forEach(docu => {
-    pedidos.push({ id: docu.id, ...docu.data() });
-  });
+  snap.forEach(d => pedidos.push({ id: d.id, ...d.data() }));
 
-  // ordenar por número
-  pedidos.sort((a, b) => a.numero - b.numero);
+  pedidos.sort((a,b)=>a.numero-b.numero);
 
-  pedidos.forEach(p => {
+  pedidos.forEach((p,i) => {
     lista.innerHTML += `
-      <li>
-        <strong>Pedido #${p.numero}</strong><br>
-        Cantidad: ${p.cantidad}<br>
-        Total: $${p.total}<br>
-        ${p.fecha} - ${p.hora}<br><br>
+      <li class="${i===0?'primero':''}">
+        <b>#${p.numero}</b> - ${p.nombre || ''}<br>
+        ${p.fecha} ${p.hora}<br>
+        Total: $${p.total}<br><br>
 
-        <button class="listo" onclick="eliminarPedido('${p.id}')">Listo</button>
-        <button class="cancelar" onclick="eliminarPedido('${p.id}')">Cancelar</button>
+        <button class="listo" onclick="eliminar('${p.id}')">Listo</button>
+        <button class="cancelar" onclick="eliminar('${p.id}')">Cancelar</button>
       </li>
     `;
   });
+
+  document.getElementById("info").innerText =
+    pedidos.length ? "Pedido #" + (pedidos[pedidos.length-1].numero + 1)
+                   : "Pedido #1";
 });
 </script>
 
