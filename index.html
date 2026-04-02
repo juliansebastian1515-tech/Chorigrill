@@ -23,18 +23,17 @@
 
         h2 { text-align: center; color: #ff9800; margin-top: 30px; }
         
-        /* LISTA DE PEDIDOS - ESTILO DE LA FOTO */
         ul { list-style: none; padding: 15px; max-width: 500px; margin: auto; }
         li { 
             background: #111; border: 2px solid #ff9800; margin-bottom: 20px; 
             padding: 18px; border-radius: 20px; color: white;
         }
         
-        /* RESALTADO AMARILLO PARA EL PRIMER PEDIDO */
+        /* RESALTADO AMARILLO SUTIL PARA EL PRIMER PEDIDO */
         li.primero { 
-            background: #ffc107; /* Amarillo de la foto */
+            background: #fff9c4; /* Amarillo crema suave, no chillón */
             color: black; 
-            border: 2px solid #ffc107;
+            border: 2px solid #fff9c4;
         }
         li.primero b, li.primero span, li.primero .total-box { color: black; }
 
@@ -42,13 +41,29 @@
         .item-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 16px; }
         
         .divider { border-top: 1px solid #444; margin: 10px 0; }
-        li.primero .divider { border-top: 1px solid rgba(0,0,0,0.2); }
+        li.primero .divider { border-top: 1px solid rgba(0,0,0,0.1); }
 
         .total-box { font-size: 18px; font-weight: bold; }
 
-        /* BOTONES LISTO Y CANCELAR */
-        .btn-listo { background: #008000; color: white; width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 18px; margin-top: 10px; cursor: pointer; }
-        .btn-cancelar { background: #ff0000; color: white; width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 18px; margin-top: 10px; cursor: pointer; }
+        /* CONTENEDOR PARA BOTONES EN FILA */
+        .botones-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-accion { 
+            flex: 1; /* Hace que ambos botones midan lo mismo */
+            padding: 12px; 
+            border-radius: 10px; 
+            border: none; 
+            font-weight: bold; 
+            font-size: 18px; 
+            cursor: pointer; 
+            color: white;
+        }
+        .btn-listo { background: #008000; }
+        .btn-cancelar { background: #ff0000; }
     </style>
 </head>
 <body>
@@ -93,7 +108,6 @@
 
     let nroSiguiente = 1;
 
-    // ESCUCHAR EN TIEMPO REAL
     onSnapshot(query(pedidosRef, orderBy("timestamp", "asc")), (snap) => {
         const lista = document.getElementById("lista");
         let html = "";
@@ -107,7 +121,7 @@
 
         snap.forEach((d, index) => {
             const p = d.data();
-            const esPrimero = index === 0 ? 'primero' : ''; // RESALTADO AMARILLO SI ES EL 0
+            const esPrimero = index === 0 ? 'primero' : '';
             
             const itemsHtml = p.detalle.map(i => `
                 <div class="item-row">
@@ -124,8 +138,10 @@
                     <div style="margin-top:10px">${itemsHtml}</div>
                     <div class="divider"></div>
                     <div class="total-box">Total: $${p.total}</div>
-                    <button class="btn-listo" onclick="finalizar('${d.id}')">Listo</button>
-                    <button class="btn-cancelar" onclick="finalizar('${d.id}')">Cancelar</button>
+                    <div class="botones-container">
+                        <button class="btn-accion btn-listo" onclick="finalizar('${d.id}')">Listo</button>
+                        <button class="btn-accion btn-cancelar" onclick="finalizar('${d.id}')">Cancelar</button>
+                    </div>
                 </li>`;
         });
         lista.innerHTML = html;
@@ -160,7 +176,6 @@
 
         try {
             const ahora = new Date();
-            // FECHA Y HORA 12H (AM/PM)
             const fecha = ahora.toLocaleDateString();
             const hora = ahora.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
