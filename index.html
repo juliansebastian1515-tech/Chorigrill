@@ -1,201 +1,194 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chorigrill 🔥</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chorigrill V2 🔥</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000; color: #fff; }
+        .app-container { max-width: 450px; margin: auto; padding: 20px; }
+        h1 { text-align: center; color: #ff9800; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .form-group { margin-bottom: 10px; }
+        input, select { 
+            width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #ff9800; 
+            background: #1a1a1a; color: white; font-size: 16px; outline: none;
+        }
+        input:focus { border-color: #ffb74d; box-shadow: 0 0 8px #ff9800; }
 
-<style>
-body { margin: 0; font-family: sans-serif; background: #000; color: white; }
-h1 { text-align: center; color: orange; margin-top: 20px; }
-.container { padding: 15px; max-width: 500px; margin: auto; }
-
-input, select {
-  width: 100%; padding: 14px; margin-top: 8px;
-  background: #111; border: 2px solid orange;
-  color: white; font-size: 16px; border-radius: 8px;
-  box-sizing: border-box;
-}
-
-button {
-  width: 100%; padding: 15px; font-size: 18px;
-  border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold;
-}
-
-.enviar { background: orange; color: black; border: none; }
-.enviar:disabled { background: #555; color: #ccc; cursor: not-allowed; }
-.listo { background: green; color: white; border: none; margin-top: 10px; }
-.cancelar { background: red; color: white; border: none; margin-top: 5px; }
-
-ul { list-style: none; padding: 15px; max-width: 500px; margin: auto; }
-li {
-  background: #111; border: 2px solid orange;
-  margin-bottom: 15px; padding: 15px; border-radius: 12px;
-}
-
-.primero { background: orange; color: black; }
-.item-row { display: flex; justify-content: space-between; margin: 2px 0; }
-hr { border: 0; border-top: 1px solid #444; margin: 10px 0; }
-</style>
+        .btn { 
+            width: 100%; padding: 15px; border: none; border-radius: 10px; 
+            font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .btn-enviar { background: #ff9800; color: #000; margin-top: 10px; }
+        .btn-enviar:disabled { background: #444; color: #888; cursor: not-allowed; }
+        
+        .pedido-card { 
+            background: #111; border: 2px solid #ff9800; padding: 15px; 
+            border-radius: 15px; margin-top: 20px; position: relative;
+        }
+        .pedido-header { border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 10px; color: #ff9800; }
+        .fila-item { display: flex; justify-content: space-between; font-size: 15px; margin: 4px 0; }
+        .total-box { font-size: 18px; font-weight: bold; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px; }
+        
+        .acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-listo { background: #4caf50; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; }
+        .btn-cancelar { background: #f44336; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; }
+        
+        .status-badge { background: #ff9800; color: black; font-size: 12px; padding: 2px 8px; border-radius: 4px; float: right; }
+    </style>
 </head>
-
 <body>
 
-<h1>🔥 Chorigrill</h1>
+<div class="app-container">
+    <h1>🔥 Chorigrill</h1>
+    
+    <div class="form-group"><input type="text" id="inp-nombre" placeholder="Nombre del Cliente"></div>
+    <div class="form-group"><input type="text" id="inp-direccion" placeholder="Dirección"></div>
+    <div class="form-group"><input type="number" id="inp-pechuga" placeholder="Cantidad Pechuga" inputmode="numeric"></div>
+    <div class="form-group"><input type="number" id="inp-carne" placeholder="Cantidad Carne" inputmode="numeric"></div>
+    <div class="form-group"><input type="number" id="inp-lomo" placeholder="Cantidad Lomo" inputmode="numeric"></div>
+    <div class="form-group"><input type="number" id="inp-sopa" placeholder="Cantidad Sopa" inputmode="numeric"></div>
+    <div class="form-group"><input type="number" id="inp-arroz" placeholder="Cantidad Arroz" inputmode="numeric"></div>
+    <div class="form-group"><input type="number" id="inp-bebida" placeholder="Precio Bebida" inputmode="numeric"></div>
+    <div class="form-group">
+        <select id="inp-tipo">
+            <option value="0">Para comer aquí</option>
+            <option value="3000">Para llevar (+3000)</option>
+        </select>
+    </div>
 
-<div class="container">
-<input id="nombre" placeholder="Nombre del cliente" autocomplete="off">
-<input id="direccion" placeholder="Dirección (opcional)" autocomplete="off">
+    <button id="main-btn" class="btn btn-enviar">REGISTRAR PEDIDO</button>
 
-<input type="number" id="pechuga" placeholder="Cantidad Pechuga" autocomplete="off" inputmode="numeric">
-<input type="number" id="carne" placeholder="Cantidad Carne" autocomplete="off" inputmode="numeric">
-<input type="number" id="lomo" placeholder="Cantidad Lomo" autocomplete="off" inputmode="numeric">
-<input type="number" id="sopa" placeholder="Cantidad Sopa" autocomplete="off" inputmode="numeric">
-<input type="number" id="arroz" placeholder="Cantidad Arroz" autocomplete="off" inputmode="numeric">
-<input type="number" id="bebida" placeholder="Precio Bebida" autocomplete="off" inputmode="numeric">
-
-<select id="tipo">
-  <option value="0">Aquí</option>
-  <option value="3000">Para llevar (+extra)</option>
-</select>
-
-<button class="enviar" id="btnEnviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
+    <h2 style="margin-top: 30px; border-left: 4px solid #ff9800; padding-left: 10px;">Pedidos Activos</h2>
+    <div id="lista-pedidos"></div>
 </div>
 
-<h2 style="text-align:center; color: orange;">Pedidos</h2>
-<ul id="lista"></ul>
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
-  authDomain: "chorigrill-9d0e9.firebaseapp.com",
-  projectId: "chorigrill-9d0e9"
-};
+    // Tu Configuración (Asegúrate que estos datos coincidan con tu Firebase Console)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHB22bT5qYZGzLtqZgo1TtwSNNc-tjRtA",
+        authDomain: "chorigrill-9d0e9.firebaseapp.com",
+        projectId: "chorigrill-9d0e9"
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const pedidosRef = collection(db, "pedidos");
 
-let contador = 1;
+    let nroPedidoSiguiente = 1;
 
-// ESCUCHAR PEDIDOS EN TIEMPO REAL
-const q = query(collection(db, "pedidos"), orderBy("numero", "asc"));
+    // --- LÓGICA DE VISUALIZACIÓN ---
+    onSnapshot(query(pedidosRef, orderBy("numero", "asc")), (snapshot) => {
+        const contenedor = document.getElementById("lista-pedidos");
+        contenedor.innerHTML = "";
+        
+        if (!snapshot.empty) {
+            const ultDoc = snapshot.docs[snapshot.docs.length - 1].data();
+            nroPedidoSiguiente = (ultDoc.numero || 0) + 1;
+        }
 
-onSnapshot(q, (snap) => {
-  const lista = document.getElementById("lista");
-  let html = "";
+        snapshot.forEach((documento) => {
+            const data = documento.data();
+            const id = documento.id;
+            
+            const card = document.createElement("div");
+            card.className = "pedido-card";
+            
+            let itemsHtml = data.items.map(i => `
+                <div class="fila-item">
+                    <span>${i.cantidad}x ${i.nombre}</span>
+                    <span>$${i.subtotal}</span>
+                </div>
+            `).join("");
 
-  if (snap.empty) {
-    contador = 1;
-  } else {
-    const docs = snap.docs;
-    contador = docs[docs.length - 1].data().numero + 1;
-  }
-
-  snap.forEach((d, index) => {
-    const p = d.data();
-    const items = p.detalle.map(i => `
-      <div class="item-row">
-        <span>${i.q}x ${i.n}</span>
-        <span>$${i.v}</span>
-      </div>
-    `).join('');
-
-    html += `
-      <li class="${index === 0 ? 'primero' : ''}">
-        <b>Pedido #${p.numero}</b> - ${p.hora}<br>
-        ${p.nombre || 'Cliente'}
-        ${p.direccion ? `<br>Dir: ${p.direccion}` : ''}
-        <div style="margin-top:8px">${items}</div>
-        <hr>
-        <b>Total: $${p.total}</b><br>
-        <button class="listo" onclick="eliminar('${d.id}')">Listo</button>
-        <button class="cancelar" onclick="eliminar('${d.id}')">Cancelar</button>
-      </li>
-    `;
-  });
-  lista.innerHTML = html;
-});
-
-// FUNCIÓN LIMPIAR CAMPOS
-function limpiarFormulario() {
-  const campos = ["nombre", "direccion", "pechuga", "carne", "lomo", "sopa", "arroz", "bebida"];
-  campos.forEach(id => {
-    document.getElementById(id).value = "";
-  });
-  document.getElementById("tipo").selectedIndex = 0;
-}
-
-// AGREGAR PEDIDO
-window.agregarPedido = async function() {
-  const btn = document.getElementById("btnEnviar");
-  const val = (id) => document.getElementById(id).value;
-
-  const p = Number(val("pechuga")) || 0;
-  const c = Number(val("carne")) || 0;
-  const l = Number(val("lomo")) || 0;
-  const s = Number(val("sopa")) || 0;
-  const a = Number(val("arroz")) || 0;
-  const b = Number(val("bebida")) || 0;
-  const extra = Number(val("tipo"));
-
-  const detalle = [];
-  if (p) detalle.push({ n: "Pechuga", q: p, v: p * 12000 });
-  if (c) detalle.push({ n: "Carne", q: c, v: c * 12000 });
-  if (l) detalle.push({ n: "Lomo", q: l, v: l * 12000 });
-  if (s) detalle.push({ n: "Sopa", q: s, v: s * 4000 });
-  if (a) detalle.push({ n: "Arroz", q: a, v: a * 1000 });
-  if (b) detalle.push({ n: "Bebida", q: 1, v: b });
-  if (extra) detalle.push({ n: "Extra", q: 1, v: extra });
-
-  const total = detalle.reduce((acc, i) => acc + i.v, 0);
-
-  if (detalle.length === 0) {
-    alert("¡Oye! Agrega al menos un producto al pedido.");
-    return;
-  }
-
-  // BLOQUEO INICIAL
-  btn.disabled = true;
-  btn.innerText = "ENVIANDO...";
-
-  try {
-    const ahora = new Date();
-    await addDoc(collection(db, "pedidos"), {
-      numero: contador,
-      nombre: val("nombre"),
-      direccion: val("direccion"),
-      detalle,
-      total,
-      fecha: ahora.toLocaleDateString(),
-      hora: ahora.toLocaleTimeString()
+            card.innerHTML = `
+                <div class="pedido-header">
+                    <span class="status-badge">NUEVO</span>
+                    <b>#${data.numero}</b> | ${data.hora}
+                </div>
+                <div><b>Cliente:</b> ${data.cliente || 'Sin nombre'}</div>
+                <div><b>Dir:</b> ${data.dir || 'En local'}</div>
+                <div style="margin-top:10px;">${itemsHtml}</div>
+                <div class="total-box">TOTAL: $${data.total}</div>
+                <div class="acciones">
+                    <button class="btn-listo" onclick="eliminarPedido('${id}')">LISTO</button>
+                    <button class="btn-cancelar" onclick="eliminarPedido('${id}')">CANCELAR</button>
+                </div>
+            `;
+            contenedor.appendChild(card);
+        });
     });
 
-    limpiarFormulario();
-    console.log("Pedido enviado con éxito");
+    // --- LÓGICA DE ENVÍO ---
+    document.getElementById("main-btn").addEventListener("click", async () => {
+        const btn = document.getElementById("main-btn");
+        
+        // 1. Obtener valores
+        const cliente = document.getElementById("inp-nombre").value;
+        const dir = document.getElementById("inp-direccion").value;
+        const pechuga = parseInt(document.getElementById("inp-pechuga").value) || 0;
+        const carne = parseInt(document.getElementById("inp-carne").value) || 0;
+        const lomo = parseInt(document.getElementById("inp-lomo")?.value) || 0;
+        const sopa = parseInt(document.getElementById("inp-sopa").value) || 0;
+        const arroz = parseInt(document.getElementById("inp-arroz").value) || 0;
+        const bebida = parseInt(document.getElementById("inp-bebida").value) || 0;
+        const extra = parseInt(document.getElementById("inp-tipo").value) || 0;
 
-  } catch (error) {
-    console.error("Error Firebase:", error);
-    alert("Hubo un error al conectar con la base de datos.");
-  } finally {
-    // DESBLOQUEO SIEMPRE
-    btn.disabled = false;
-    btn.innerText = "ENVIAR PEDIDO";
-  }
-};
+        // 2. Construir detalle del pedido
+        const listaFinal = [];
+        if(pechuga) listaFinal.push({ nombre: "Pechuga", cantidad: pechuga, subtotal: pechuga * 12000 });
+        if(carne)   listaFinal.push({ nombre: "Carne", cantidad: carne, subtotal: carne * 12000 });
+        if(lomo)    listaFinal.push({ nombre: "Lomo", cantidad: lomo, subtotal: lomo * 12000 });
+        if(sopa)    listaFinal.push({ nombre: "Sopa", cantidad: sopa, subtotal: sopa * 4000 });
+        if(arroz)   listaFinal.push({ nombre: "Arroz", cantidad: arroz, subtotal: arroz * 1000 });
+        if(bebida)  listaFinal.push({ nombre: "Bebida", cantidad: 1, subtotal: bebida });
+        if(extra)   listaFinal.push({ nombre: "Envío/Llevar", cantidad: 1, subtotal: extra });
 
-// ELIMINAR PEDIDO
-window.eliminar = async (id) => {
-  if(confirm("¿Estás seguro de quitar este pedido?")) {
-    try {
-      await deleteDoc(doc(db, "pedidos", id));
-    } catch (e) {
-      console.error("Error al eliminar:", e);
-    }
-  }
-};
+        const totalFinal = listaFinal.reduce((sum, item) => sum + item.subtotal, 0);
+
+        if(totalFinal === 0) return alert("El pedido está vacío");
+
+        // 3. Bloquear interfaz
+        btn.disabled = true;
+        btn.innerText = "PROCESANDO...";
+
+        try {
+            const time = new Date();
+            await addDoc(pedidosRef, {
+                numero: nroPedidoSiguiente,
+                cliente: cliente,
+                dir: dir,
+                items: listaFinal,
+                total: totalFinal,
+                hora: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timestamp: Date.now()
+            });
+
+            // 4. Limpiar Formulario
+            document.querySelectorAll("input").forEach(i => i.value = "");
+            document.getElementById("inp-tipo").selectedIndex = 0;
+            
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión con Firebase. Verifica tu internet.");
+        } finally {
+            // 5. IMPORTANTE: Desbloquear siempre
+            btn.disabled = false;
+            btn.innerText = "REGISTRAR PEDIDO";
+        }
+    });
+
+    // --- FUNCIÓN PARA ELIMINAR ---
+    window.eliminarPedido = async (id) => {
+        if(confirm("¿Quitar pedido de la lista?")) {
+            await deleteDoc(doc(db, "pedidos", id));
+        }
+    };
 </script>
 
 </body>
