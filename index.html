@@ -16,23 +16,25 @@
 
         .btn-enviar { 
             width: 100%; padding: 15px; font-size: 18px; border-radius: 12px; margin-top: 15px; 
-            cursor: pointer; font-weight: bold; border: none; background: #ff9800; color: black;
+            cursor: pointer; font-weight: bold; border: none; background: #888; color: white;
         }
+        .btn-enviar.activo { background: #ff9800; color: black; }
         .btn-enviar:disabled { background: #444; color: #888; cursor: not-allowed; }
 
         h2 { text-align: center; color: #ff9800; margin-top: 30px; }
         
+        /* LISTA DE PEDIDOS - ESTILO DE LA FOTO */
         ul { list-style: none; padding: 15px; max-width: 500px; margin: auto; }
         li { 
             background: #111; border: 2px solid #ff9800; margin-bottom: 20px; 
             padding: 18px; border-radius: 20px; color: white;
         }
         
-        /* PRIMER PEDIDO: AMARILLO SUTIL */
+        /* RESALTADO AMARILLO PARA EL PRIMER PEDIDO */
         li.primero { 
-            background: #fff9c4; /* Amarillo pastel muy suave */
+            background: #ffc107; /* Amarillo de la foto */
             color: black; 
-            border: 2px solid #fff9c4;
+            border: 2px solid #ffc107;
         }
         li.primero b, li.primero span, li.primero .total-box { color: black; }
 
@@ -40,18 +42,13 @@
         .item-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 16px; }
         
         .divider { border-top: 1px solid #444; margin: 10px 0; }
-        li.primero .divider { border-top: 1px solid rgba(0,0,0,0.1); }
+        li.primero .divider { border-top: 1px solid rgba(0,0,0,0.2); }
 
         .total-box { font-size: 18px; font-weight: bold; }
 
-        /* BOTONES UNO AL LADO DEL OTRO */
-        .botones-fila { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-accion { 
-            flex: 1; padding: 12px; border-radius: 10px; border: none; 
-            font-weight: bold; font-size: 16px; cursor: pointer; color: white;
-        }
-        .btn-listo { background: #28a745; }
-        .btn-cancelar { background: #dc3545; }
+        /* BOTONES LISTO Y CANCELAR */
+        .btn-listo { background: #008000; color: white; width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 18px; margin-top: 10px; cursor: pointer; }
+        .btn-cancelar { background: #ff0000; color: white; width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 18px; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -61,22 +58,20 @@
 <div class="container">
     <input id="nombre" placeholder="Nombre del cliente">
     <input id="direccion" placeholder="Dirección (opcional)">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <input type="number" id="pechuga" placeholder="Pechuga" inputmode="numeric">
-        <input type="number" id="carne" placeholder="Carne" inputmode="numeric">
-        <input type="number" id="lomo" placeholder="Lomo" inputmode="numeric">
-        <input type="number" id="sopa" placeholder="Sopa" inputmode="numeric">
-    </div>
+    <input type="number" id="pechuga" placeholder="Cantidad Pechuga" inputmode="numeric">
+    <input type="number" id="carne" placeholder="Cantidad Carne" inputmode="numeric">
+    <input type="number" id="lomo" placeholder="Cantidad Lomo" inputmode="numeric">
+    <input type="number" id="sopa" placeholder="Cantidad Sopa" inputmode="numeric">
     <input type="number" id="arroz" placeholder="Cantidad Arroz" inputmode="numeric">
     <input type="number" id="bebida" placeholder="Precio Bebida" inputmode="numeric">
     <select id="tipo">
-        <option value="Aquí">Para comer aquí</option>
-        <option value="Para llevar">Para llevar (Envío Gratis)</option>
+        <option value="0">Aquí</option>
+        <option value="3000">Para llevar (+3000)</option>
     </select>
-    <button class="btn-enviar" id="btnEnviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
+    <button class="btn-enviar activo" id="btnEnviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
 </div>
 
-<h2>Pedidos Activos</h2>
+<h2>Pedidos</h2>
 <ul id="lista"></ul>
 
 <script type="module">
@@ -98,19 +93,21 @@
 
     let nroSiguiente = 1;
 
+    // ESCUCHAR EN TIEMPO REAL
     onSnapshot(query(pedidosRef, orderBy("timestamp", "asc")), (snap) => {
         const lista = document.getElementById("lista");
         let html = "";
         
         if (!snap.empty) {
-            nroSiguiente = snap.docs[snap.docs.length - 1].data().numero + 1;
+            const docs = snap.docs;
+            nroSiguiente = docs[docs.length - 1].data().numero + 1;
         } else {
             nroSiguiente = 1;
         }
 
         snap.forEach((d, index) => {
             const p = d.data();
-            const esPrimero = index === 0 ? 'primero' : '';
+            const esPrimero = index === 0 ? 'primero' : ''; // RESALTADO AMARILLO SI ES EL 0
             
             const itemsHtml = p.detalle.map(i => `
                 <div class="item-row">
@@ -121,16 +118,14 @@
 
             html += `
                 <li class="${esPrimero}">
-                    <div class="pedido-info"><b>#${p.numero}</b> - ${p.hora}</div>
-                    <div class="pedido-info"><b>${p.nombre || 'Cliente'}</b> (${p.tipo})</div>
+                    <div class="pedido-info"><b>Pedido #${p.numero}</b> - ${p.fecha} | ${p.hora}</div>
+                    <div class="pedido-info"><b>${p.nombre || 'Cliente'}</b></div>
                     ${p.direccion ? `<div class="pedido-info"><i>${p.direccion}</i></div>` : ''}
                     <div style="margin-top:10px">${itemsHtml}</div>
                     <div class="divider"></div>
                     <div class="total-box">Total: $${p.total}</div>
-                    <div class="botones-fila">
-                        <button class="btn-accion btn-listo" onclick="finalizar('${d.id}')">LISTO</button>
-                        <button class="btn-accion btn-cancelar" onclick="finalizar('${d.id}')">BORRAR</button>
-                    </div>
+                    <button class="btn-listo" onclick="finalizar('${d.id}')">Listo</button>
+                    <button class="btn-cancelar" onclick="finalizar('${d.id}')">Cancelar</button>
                 </li>`;
         });
         lista.innerHTML = html;
@@ -155,24 +150,27 @@
         });
 
         if(Number(val("bebida")) > 0) detalle.push({ n: "Bebida", q: 1, v: Number(val("bebida")) });
+        if(Number(val("tipo")) > 0) detalle.push({ n: "Domi/Llevar", q: 1, v: Number(val("tipo")) });
 
         const total = detalle.reduce((acc, i) => acc + i.v, 0);
-        if (total === 0) return alert("¡Agrega productos!");
+        if (total === 0) return alert("¡Pedido vacío!");
 
         btn.disabled = true;
         btn.innerText = "ENVIANDO...";
 
         try {
             const ahora = new Date();
+            // FECHA Y HORA 12H (AM/PM)
+            const fecha = ahora.toLocaleDateString();
             const hora = ahora.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
             await addDoc(pedidosRef, {
                 numero: nroSiguiente,
                 nombre: val("nombre"),
                 direccion: val("direccion"),
-                tipo: document.getElementById("tipo").value,
                 detalle: detalle,
                 total: total,
+                fecha: fecha,
                 hora: hora,
                 timestamp: Date.now()
             });
@@ -189,7 +187,9 @@
     };
 
     window.finalizar = async (id) => {
-        await deleteDoc(doc(db, "pedidos", id));
+        if(confirm("¿Quitar de la lista?")) {
+            await deleteDoc(doc(db, "pedidos", id));
+        }
     };
 </script>
 </body>
