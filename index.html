@@ -32,7 +32,7 @@
         
         /* RESALTADO AUTOMÁTICO DEL PRIMER PEDIDO */
         li:first-child { 
-            background: #fff9c4 !important; /* Amarillo crema sutil */
+            background: #fff9c4 !important; 
             color: #333 !important;
             border: 2px solid #fff9c4 !important;
         }
@@ -56,7 +56,7 @@
         li:first-child .divider { border-top: 1px solid rgba(0,0,0,0.1); }
         .total-box { font-size: 18px; font-weight: bold; }
 
-        /* BOTONES UNO AL LADO DEL OTRO */
+        /* BOTONES EN FILA */
         .botones-fila { display: flex; gap: 10px; margin-top: 15px; }
         .btn-accion { 
             flex: 1; padding: 12px; border-radius: 10px; border: none; 
@@ -73,12 +73,10 @@
 <div class="container">
     <input id="nombre" placeholder="Nombre del cliente">
     <input id="direccion" placeholder="Dirección (opcional)">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <input type="number" id="pechuga" placeholder="Pechuga" inputmode="numeric">
-        <input type="number" id="carne" placeholder="Carne" inputmode="numeric">
-        <input type="number" id="lomo" placeholder="Lomo" inputmode="numeric">
-        <input type="number" id="sopa" placeholder="Sopa" inputmode="numeric">
-    </div>
+    <input type="number" id="pechuga" placeholder="Cantidad Pechuga" inputmode="numeric">
+    <input type="number" id="carne" placeholder="Cantidad Carne" inputmode="numeric">
+    <input type="number" id="lomo" placeholder="Cantidad Lomo" inputmode="numeric">
+    <input type="number" id="sopa" placeholder="Cantidad Sopa" inputmode="numeric">
     <input type="number" id="arroz" placeholder="Cantidad Arroz" inputmode="numeric">
     <input type="number" id="bebida" placeholder="Precio Bebida" inputmode="numeric">
     <select id="tipo">
