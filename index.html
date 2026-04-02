@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chorigrill 🔥</title>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #000; color: white; }
-        h1 { text-align: center; color: #ff9800; margin-top: 20px; font-weight: bold; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; }
+        h1 { text-align: center; color: #ff9800; margin-top: 20px; text-transform: uppercase; }
         .container { padding: 15px; max-width: 500px; margin: auto; }
         
         input, select { 
@@ -16,54 +16,54 @@
 
         .btn-enviar { 
             width: 100%; padding: 15px; font-size: 18px; border-radius: 12px; margin-top: 15px; 
-            cursor: pointer; font-weight: bold; border: none; background: #888; color: white;
+            cursor: pointer; font-weight: bold; border: none; background: #ff9800; color: black;
         }
-        .btn-enviar.activo { background: #ff9800; color: black; }
-        .btn-enviar:disabled { background: #444; color: #888; cursor: not-allowed; }
 
         h2 { text-align: center; color: #ff9800; margin-top: 30px; }
         
         ul { list-style: none; padding: 15px; max-width: 500px; margin: auto; }
+        
+        /* TARJETA DE PEDIDO */
         li { 
             background: #111; border: 2px solid #ff9800; margin-bottom: 20px; 
             padding: 18px; border-radius: 20px; color: white;
+            position: relative;
         }
         
-        /* RESALTADO AMARILLO SUTIL PARA EL PRIMER PEDIDO */
-        li.primero { 
-            background: #fff9c4; /* Amarillo crema suave, no chillón */
-            color: black; 
-            border: 2px solid #fff9c4;
+        /* RESALTADO AUTOMÁTICO DEL PRIMER PEDIDO */
+        li:first-child { 
+            background: #fff9c4 !important; /* Amarillo crema sutil */
+            color: #333 !important;
+            border: 2px solid #fff9c4 !important;
         }
-        li.primero b, li.primero span, li.primero .total-box { color: black; }
+        
+        li:first-child b, li:first-child span, li:first-child .total-box, li:first-child .fecha-esquina { 
+            color: #000 !important; 
+        }
 
-        .pedido-info { font-size: 16px; margin-bottom: 5px; }
+        /* FECHA EN LA ESQUINA DERECHA */
+        .fecha-esquina {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            font-size: 13px;
+            color: #bbb;
+        }
+
+        .pedido-info { font-size: 16px; margin-bottom: 5px; width: 75%; }
         .item-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 16px; }
-        
         .divider { border-top: 1px solid #444; margin: 10px 0; }
-        li.primero .divider { border-top: 1px solid rgba(0,0,0,0.1); }
-
+        li:first-child .divider { border-top: 1px solid rgba(0,0,0,0.1); }
         .total-box { font-size: 18px; font-weight: bold; }
 
-        /* CONTENEDOR PARA BOTONES EN FILA */
-        .botones-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
+        /* BOTONES UNO AL LADO DEL OTRO */
+        .botones-fila { display: flex; gap: 10px; margin-top: 15px; }
         .btn-accion { 
-            flex: 1; /* Hace que ambos botones midan lo mismo */
-            padding: 12px; 
-            border-radius: 10px; 
-            border: none; 
-            font-weight: bold; 
-            font-size: 18px; 
-            cursor: pointer; 
-            color: white;
+            flex: 1; padding: 12px; border-radius: 10px; border: none; 
+            font-weight: bold; font-size: 16px; cursor: pointer; color: white;
         }
-        .btn-listo { background: #008000; }
-        .btn-cancelar { background: #ff0000; }
+        .btn-listo { background: #28a745; }
+        .btn-cancelar { background: #dc3545; }
     </style>
 </head>
 <body>
@@ -73,20 +73,22 @@
 <div class="container">
     <input id="nombre" placeholder="Nombre del cliente">
     <input id="direccion" placeholder="Dirección (opcional)">
-    <input type="number" id="pechuga" placeholder="Cantidad Pechuga" inputmode="numeric">
-    <input type="number" id="carne" placeholder="Cantidad Carne" inputmode="numeric">
-    <input type="number" id="lomo" placeholder="Cantidad Lomo" inputmode="numeric">
-    <input type="number" id="sopa" placeholder="Cantidad Sopa" inputmode="numeric">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <input type="number" id="pechuga" placeholder="Pechuga" inputmode="numeric">
+        <input type="number" id="carne" placeholder="Carne" inputmode="numeric">
+        <input type="number" id="lomo" placeholder="Lomo" inputmode="numeric">
+        <input type="number" id="sopa" placeholder="Sopa" inputmode="numeric">
+    </div>
     <input type="number" id="arroz" placeholder="Cantidad Arroz" inputmode="numeric">
     <input type="number" id="bebida" placeholder="Precio Bebida" inputmode="numeric">
     <select id="tipo">
-        <option value="0">Aquí</option>
-        <option value="3000">Para llevar (+3000)</option>
+        <option value="Aquí">Para comer aquí</option>
+        <option value="Llevar">Para llevar (Envío Gratis)</option>
     </select>
-    <button class="btn-enviar activo" id="btnEnviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
+    <button class="btn-enviar" id="btnEnviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
 </div>
 
-<h2>Pedidos</h2>
+<h2>Pedidos Activos</h2>
 <ul id="lista"></ul>
 
 <script type="module">
@@ -113,16 +115,13 @@
         let html = "";
         
         if (!snap.empty) {
-            const docs = snap.docs;
-            nroSiguiente = docs[docs.length - 1].data().numero + 1;
+            nroSiguiente = snap.docs[snap.docs.length - 1].data().numero + 1;
         } else {
             nroSiguiente = 1;
         }
 
-        snap.forEach((d, index) => {
+        snap.forEach((d) => {
             const p = d.data();
-            const esPrimero = index === 0 ? 'primero' : '';
-            
             const itemsHtml = p.detalle.map(i => `
                 <div class="item-row">
                     <span>${i.q}x ${i.n}</span>
@@ -131,16 +130,17 @@
             `).join('');
 
             html += `
-                <li class="${esPrimero}">
-                    <div class="pedido-info"><b>Pedido #${p.numero}</b> - ${p.fecha} | ${p.hora}</div>
-                    <div class="pedido-info"><b>${p.nombre || 'Cliente'}</b></div>
+                <li>
+                    <div class="fecha-esquina">${p.fechaFormatted} | ${p.hora}</div>
+                    <div class="pedido-info"><b>Pedido #${p.numero}</b></div>
+                    <div class="pedido-info"><b>${p.nombre || 'Cliente'}</b> (${p.tipo})</div>
                     ${p.direccion ? `<div class="pedido-info"><i>${p.direccion}</i></div>` : ''}
                     <div style="margin-top:10px">${itemsHtml}</div>
                     <div class="divider"></div>
                     <div class="total-box">Total: $${p.total}</div>
-                    <div class="botones-container">
-                        <button class="btn-accion btn-listo" onclick="finalizar('${d.id}')">Listo</button>
-                        <button class="btn-accion btn-cancelar" onclick="finalizar('${d.id}')">Cancelar</button>
+                    <div class="botones-fila">
+                        <button class="btn-accion btn-listo" onclick="finalizar('${d.id}')">LISTO</button>
+                        <button class="btn-accion btn-cancelar" onclick="finalizar('${d.id}')">BORRAR</button>
                     </div>
                 </li>`;
         });
@@ -166,26 +166,27 @@
         });
 
         if(Number(val("bebida")) > 0) detalle.push({ n: "Bebida", q: 1, v: Number(val("bebida")) });
-        if(Number(val("tipo")) > 0) detalle.push({ n: "Domi/Llevar", q: 1, v: Number(val("tipo")) });
 
         const total = detalle.reduce((acc, i) => acc + i.v, 0);
-        if (total === 0) return alert("¡Pedido vacío!");
+        if (total === 0) return alert("¡Agrega productos!");
 
         btn.disabled = true;
         btn.innerText = "ENVIANDO...";
 
         try {
             const ahora = new Date();
-            const fecha = ahora.toLocaleDateString();
+            const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+            const fechaFormatted = `${ahora.getDate()}/${meses[ahora.getMonth()]}/${ahora.getFullYear()}`;
             const hora = ahora.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
             await addDoc(pedidosRef, {
                 numero: nroSiguiente,
                 nombre: val("nombre"),
                 direccion: val("direccion"),
+                tipo: document.getElementById("tipo").value,
                 detalle: detalle,
                 total: total,
-                fecha: fecha,
+                fechaFormatted: fechaFormatted,
                 hora: hora,
                 timestamp: Date.now()
             });
@@ -202,9 +203,7 @@
     };
 
     window.finalizar = async (id) => {
-        if(confirm("¿Quitar de la lista?")) {
-            await deleteDoc(doc(db, "pedidos", id));
-        }
+        await deleteDoc(doc(db, "pedidos", id));
     };
 </script>
 </body>
