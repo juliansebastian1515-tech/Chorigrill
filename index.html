@@ -14,6 +14,7 @@ input, select {
   width: 100%; padding: 14px; margin-top: 8px;
   background: #111; border: 2px solid orange;
   color: white; font-size: 16px; border-radius: 8px;
+  box-sizing: border-box;
 }
 
 button {
@@ -21,9 +22,10 @@ button {
   border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold;
 }
 
-.enviar { background: orange; color: black; }
-.listo { background: green; color: white; }
-.cancelar { background: red; color: white; }
+.enviar { background: orange; color: black; border: none; }
+.enviar:disabled { background: #555; color: #ccc; cursor: not-allowed; }
+.listo { background: green; color: white; border: none; margin-top: 10px; }
+.cancelar { background: red; color: white; border: none; margin-top: 5px; }
 
 ul { list-style: none; padding: 15px; max-width: 500px; margin: auto; }
 li {
@@ -32,7 +34,8 @@ li {
 }
 
 .primero { background: orange; color: black; }
-.item-row { display: flex; justify-content: space-between; }
+.item-row { display: flex; justify-content: space-between; margin: 2px 0; }
+hr { border: 0; border-top: 1px solid #444; margin: 10px 0; }
 </style>
 </head>
 
@@ -41,7 +44,6 @@ li {
 <h1>🔥 Chorigrill</h1>
 
 <div class="container">
-
 <input id="nombre" placeholder="Nombre del cliente" autocomplete="off">
 <input id="direccion" placeholder="Dirección (opcional)" autocomplete="off">
 
@@ -58,7 +60,6 @@ li {
 </select>
 
 <button class="enviar" id="btnEnviar" onclick="agregarPedido()">ENVIAR PEDIDO</button>
-
 </div>
 
 <h2 style="text-align:center; color: orange;">Pedidos</h2>
@@ -79,6 +80,7 @@ const db = getFirestore(app);
 
 let contador = 1;
 
+// ESCUCHAR PEDIDOS EN TIEMPO REAL
 const q = query(collection(db, "pedidos"), orderBy("numero", "asc"));
 
 onSnapshot(q, (snap) => {
@@ -88,12 +90,12 @@ onSnapshot(q, (snap) => {
   if (snap.empty) {
     contador = 1;
   } else {
-    contador = snap.docs[snap.docs.length - 1].data().numero + 1;
+    const docs = snap.docs;
+    contador = docs[docs.length - 1].data().numero + 1;
   }
 
   snap.forEach((d, index) => {
     const p = d.data();
-
     const items = p.detalle.map(i => `
       <div class="item-row">
         <span>${i.q}x ${i.n}</span>
@@ -104,43 +106,42 @@ onSnapshot(q, (snap) => {
     html += `
       <li class="${index === 0 ? 'primero' : ''}">
         <b>Pedido #${p.numero}</b> - ${p.hora}<br>
-        ${p.nombre || ''}
-        ${p.direccion ? `<br>${p.direccion}` : ''}
-        <div>${items}</div>
-        <b>Total: $${p.total}</b><br><br>
-
+        ${p.nombre || 'Cliente'}
+        ${p.direccion ? `<br>Dir: ${p.direccion}` : ''}
+        <div style="margin-top:8px">${items}</div>
+        <hr>
+        <b>Total: $${p.total}</b><br>
         <button class="listo" onclick="eliminar('${d.id}')">Listo</button>
         <button class="cancelar" onclick="eliminar('${d.id}')">Cancelar</button>
       </li>
     `;
   });
-
   lista.innerHTML = html;
 });
 
-// LIMPIAR
-function limpiar() {
-  document.querySelectorAll("input").forEach(i => i.value = "");
+// FUNCIÓN LIMPIAR CAMPOS
+function limpiarFormulario() {
+  const campos = ["nombre", "direccion", "pechuga", "carne", "lomo", "sopa", "arroz", "bebida"];
+  campos.forEach(id => {
+    document.getElementById(id).value = "";
+  });
   document.getElementById("tipo").selectedIndex = 0;
-  document.activeElement.blur();
 }
 
-// AGREGAR
+// AGREGAR PEDIDO
 window.agregarPedido = async function() {
   const btn = document.getElementById("btnEnviar");
-  btn.disabled = true;
-  btn.innerText = "ENVIANDO...";
+  const val = (id) => document.getElementById(id).value;
 
-  const p = Number(pechuga.value) || 0;
-  const c = Number(carne.value) || 0;
-  const l = Number(lomo.value) || 0;
-  const s = Number(sopa.value) || 0;
-  const a = Number(arroz.value) || 0;
-  const b = Number(bebida.value) || 0;
-  const extra = Number(tipo.value);
+  const p = Number(val("pechuga")) || 0;
+  const c = Number(val("carne")) || 0;
+  const l = Number(val("lomo")) || 0;
+  const s = Number(val("sopa")) || 0;
+  const a = Number(val("arroz")) || 0;
+  const b = Number(val("bebida")) || 0;
+  const extra = Number(val("tipo"));
 
   const detalle = [];
-
   if (p) detalle.push({ n: "Pechuga", q: p, v: p * 12000 });
   if (c) detalle.push({ n: "Carne", q: c, v: c * 12000 });
   if (l) detalle.push({ n: "Lomo", q: l, v: l * 12000 });
@@ -151,34 +152,49 @@ window.agregarPedido = async function() {
 
   const total = detalle.reduce((acc, i) => acc + i.v, 0);
 
-  if (!total) {
-    alert("Agrega productos");
-    btn.disabled = false;
-    btn.innerText = "ENVIAR PEDIDO";
+  if (detalle.length === 0) {
+    alert("¡Oye! Agrega al menos un producto al pedido.");
     return;
   }
 
-  const ahora = new Date();
+  // BLOQUEO INICIAL
+  btn.disabled = true;
+  btn.innerText = "ENVIANDO...";
 
-  await addDoc(collection(db, "pedidos"), {
-    numero: contador,
-    nombre: nombre.value,
-    direccion: direccion.value,
-    detalle,
-    total,
-    fecha: ahora.toLocaleDateString(),
-    hora: ahora.toLocaleTimeString()
-  });
+  try {
+    const ahora = new Date();
+    await addDoc(collection(db, "pedidos"), {
+      numero: contador,
+      nombre: val("nombre"),
+      direccion: val("direccion"),
+      detalle,
+      total,
+      fecha: ahora.toLocaleDateString(),
+      hora: ahora.toLocaleTimeString()
+    });
 
-  limpiar();
+    limpiarFormulario();
+    console.log("Pedido enviado con éxito");
 
-  btn.disabled = false;
-  btn.innerText = "ENVIAR PEDIDO";
+  } catch (error) {
+    console.error("Error Firebase:", error);
+    alert("Hubo un error al conectar con la base de datos.");
+  } finally {
+    // DESBLOQUEO SIEMPRE
+    btn.disabled = false;
+    btn.innerText = "ENVIAR PEDIDO";
+  }
 };
 
-// ELIMINAR
+// ELIMINAR PEDIDO
 window.eliminar = async (id) => {
-  await deleteDoc(doc(db, "pedidos", id));
+  if(confirm("¿Estás seguro de quitar este pedido?")) {
+    try {
+      await deleteDoc(doc(db, "pedidos", id));
+    } catch (e) {
+      console.error("Error al eliminar:", e);
+    }
+  }
 };
 </script>
 
