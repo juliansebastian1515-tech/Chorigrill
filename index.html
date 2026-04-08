@@ -23,14 +23,12 @@
         
         ul { list-style: none; padding: 15px; max-width: 500px; margin: auto; }
         
-        /* TARJETA DE PEDIDO */
         li { 
             background: #111; border: 2px solid #ff9800; margin-bottom: 20px; 
             padding: 18px; border-radius: 20px; color: white;
             position: relative;
         }
         
-        /* RESALTADO AUTOMÁTICO DEL PRIMER PEDIDO */
         li:first-child { 
             background: #fff9c4 !important; 
             color: #333 !important;
@@ -41,7 +39,6 @@
             color: #000 !important; 
         }
 
-        /* FECHA EN LA ESQUINA DERECHA */
         .fecha-esquina {
             position: absolute;
             top: 18px;
@@ -56,14 +53,16 @@
         li:first-child .divider { border-top: 1px solid rgba(0,0,0,0.1); }
         .total-box { font-size: 18px; font-weight: bold; }
 
-        /* BOTONES EN FILA */
-        .botones-fila { display: flex; gap: 10px; margin-top: 15px; }
+        .botones-fila { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .btn-accion { 
             flex: 1; padding: 12px; border-radius: 10px; border: none; 
-            font-weight: bold; font-size: 16px; cursor: pointer; color: white;
+            font-weight: bold; font-size: 14px; cursor: pointer; color: white;
+            min-width: 80px;
         }
         .btn-listo { background: #28a745; }
         .btn-cancelar { background: #dc3545; }
+        /* NUEVO BOTÓN NARANJA */
+        .btn-editar { background: #ff9800; color: black; } 
     </style>
 </head>
 <body>
@@ -127,6 +126,9 @@
                 </div>
             `).join('');
 
+            // Pasamos los datos del pedido a la función editar en formato JSON
+            const datosPedido = JSON.stringify(p).replace(/"/g, '&quot;');
+
             html += `
                 <li>
                     <div class="fecha-esquina">${p.fechaFormatted} | ${p.hora}</div>
@@ -137,6 +139,7 @@
                     <div class="divider"></div>
                     <div class="total-box">Total: $${p.total}</div>
                     <div class="botones-fila">
+                        <button class="btn-accion btn-editar" onclick='editarPedido(${datosPedido}, "${d.id}")'>EDITAR</button>
                         <button class="btn-accion btn-listo" onclick="finalizar('${d.id}')">LISTO</button>
                         <button class="btn-accion btn-cancelar" onclick="finalizar('${d.id}')">CANCELAR</button>
                     </div>
@@ -144,6 +147,32 @@
         });
         lista.innerHTML = html;
     });
+
+    // FUNCIÓN PARA CARGAR EL PEDIDO EN EL FORMULARIO
+    window.editarPedido = function(p, id) {
+        document.getElementById("nombre").value = p.nombre;
+        document.getElementById("direccion").value = p.direccion;
+        document.getElementById("tipo").value = p.tipo;
+        
+        // Limpiamos primero los inputs de cantidad
+        ["pechuga", "carne", "lomo", "sopa", "arroz", "bebida"].forEach(id => document.getElementById(id).value = "");
+
+        // Llenamos según lo que tenga el detalle
+        p.detalle.forEach(item => {
+            if (item.n === "Bebida") {
+                document.getElementById("bebida").value = item.v;
+            } else {
+                const idInput = item.n.toLowerCase();
+                if (document.getElementById(idInput)) {
+                    document.getElementById(idInput).value = item.q;
+                }
+            }
+        });
+
+        // Borramos el pedido anterior para que al dar "Enviar" se actualice
+        finalizar(id);
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Sube suavemente al formulario
+    };
 
     window.agregarPedido = async function() {
         const btn = document.getElementById("btnEnviar");
